@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "a4f80897897753ef",
+        "id": "b6ba21cd65132bdd",
         "type": "tabs",
         "children": [
           {
-            "id": "79b7b84e80630a69",
+            "id": "f4c8a791979aafda",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "plan.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "plan"
+              "title": "New tab"
             }
           }
         ]
@@ -95,7 +91,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "plan.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -105,7 +100,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for plan"
+              "title": "Backlinks"
             }
           },
           {
@@ -114,12 +109,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "plan.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from plan"
+              "title": "Outgoing links"
             }
           },
           {
@@ -157,13 +151,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "plan.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of plan"
+              "title": "Outline"
             }
           }
         ]
@@ -184,8 +177,12 @@
       "bases:Create new base": false
     }
   },
-  "active": "79b7b84e80630a69",
+  "active": "f4c8a791979aafda",
   "lastOpenFiles": [
+    "plan.md",
+    "notes/plan.md",
+    "notes",
+    "aegis.yaml",
     "go.mod",
     "cmd/main.go",
     "internal/config",
@@ -193,9 +190,6 @@
     "internal/hotkey",
     "internal/invalidation",
     "internal/cache",
-    "internal/proxy",
-    "internal/server",
-    "internal/resp",
-    "example.yaml"
+    "internal/proxy"
   ]
 }

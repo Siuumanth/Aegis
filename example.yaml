@@ -82,8 +82,6 @@ hot_keys:
     extend_ttl: true
     ttl_multiplier: 3
     swr_enabled: true
-    prefetch: true
-    prefetch_threshold: 0.8   # refresh at 80% of TTL
 
 # Cache retries
 retry:
