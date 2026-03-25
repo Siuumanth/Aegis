@@ -1,0 +1,116 @@
+# Aegis server configuration
+server:
+  host: "0.0.0.0"
+  port: 6379
+  read_timeout: 50ms
+  write_timeout: 50ms
+  max_connections: 10000
+
+# Aegis client configuration
+redis:
+  address: "localhost:6380"
+  pool_size: 100
+  min_idle_conns: 10
+  max_retries: 2
+  dial_timeout: 100ms
+  read_timeout: 50ms
+  write_timeout: 50ms
+
+# Resp Protocol configs
+resp:
+  version: 2
+  strict_mode: false
+  max_bulk_size: 10MB
+
+# AEGIS CACHE CONFIGURATIONS:
+# tag invalidations
+tag_invalidation:
+  enabled: true
+  max_tags_per_key: 10
+  max_keys_per_tag: 10000
+  async_invalidation: true
+  batch_size: 100
+
+# PReventing thundering herd
+singleflight:
+  enabled: true
+  max_inflight_per_key: 1
+  timeout: 200ms
+
+# TIme to live configs
+ttl_policy:
+  enabled: true
+  default_ttl: 60s
+  respect_client_ttl: true
+
+# basically stores all keys with same tags in a go map for easy invalidation and ttls
+  tag_ttls:
+    users: 30s
+    posts: 120s
+    feeds: 10s
+
+  key_patterns:
+    "user:*": 45s
+    "feed:*": 15s
+
+  min_ttl: 5s
+  max_ttl: 10m
+
+# Stale while revalidate
+swr:
+  enabled: true
+  stale_window: 30s
+  async_refresh: true
+  refresh_workers: 4
+  refresh_queue_size: 1000
+
+negative_cache:
+  enabled: true
+  ttl: 5s
+  marker: "nil"
+  cache_errors: false
+
+# Hoy Keys
+hot_keys:
+  enabled: true
+  window: 1s
+  threshold: 100
+  max_tracked_keys: 10000
+  cleanup_interval: 10s
+
+  actions:
+    extend_ttl: true
+    ttl_multiplier: 3
+    swr_enabled: true
+    prefetch: true
+    prefetch_threshold: 0.8   # refresh at 80% of TTL
+
+# Cache retries
+retry:
+  enabled: true
+  max_attempts: 3
+  base_delay: 10ms
+  max_delay: 100ms
+  jitter: true
+
+
+# LATER
+observability:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  metrics:
+    cache_hits: true
+    cache_misses: true
+    stale_served: true
+    invalidations: true
+    hot_keys: true
+    singleflight_dedup: true
+    latency_histogram: true
+
+  logging:
+    level: "info"
+    format: "json"
+    slow_request_threshold: 100ms
