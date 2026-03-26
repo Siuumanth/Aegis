@@ -2,6 +2,11 @@ package policy
 
 import "time"
 
+type GlobalConfig struct {
+	HotKeys  HotKeysConfig
+	Defaults DefaultConfig
+}
+
 // top level config
 type Config struct {
 	Server   ServerConfig  `yaml:"server"`

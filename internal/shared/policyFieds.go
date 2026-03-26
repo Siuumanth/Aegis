@@ -1,61 +1,49 @@
-server:
-  host: "0.0.0.0"
-  port: 6379
-  read_timeout: 30s
-  write_timeout: 30s
-  max_connections: 10000
+package shared
 
-redis:
-  address: "localhost:6380"
-  pool_size: 100
-  min_idle_conns: 10
-  dial_timeout: 5s
-  read_timeout: 3s
-  write_timeout: 3s
-  max_retries: 2
+import "time"
 
-defaults:
-  ttl: 60s
-  thundering_herd: true
+// ===== TTL Defaults =====
+const (
+	DefaultTTL    = 60 * time.Second
+	DefaultMinTTL = 5 * time.Second
+	DefaultMaxTTL = 10 * time.Minute
+)
 
-hot_keys:
-  max_tracked: 10000        # system-wide memory cap
-  cleanup_interval: 10s     # how often stale hot key records are evicted
+// ===== Singleflight =====
+const (
+	DefaultSingleflightEnabled = false
+)
 
-policies:
-  - name: "user-profiles"
-    match:
-      pattern: "user:*"
-    config:
-      ttl: 45s
-      min_ttl: 5s
-      max_ttl: 10m
-      singleflight: true
-      tags: [users, profiles]
-      hot_key:
-        enabled: true
-        window: 1s
-        threshold: 100
-        ttl_multiplier: 3
+// ===== Hot Key Defaults =====
+const (
+	DefaultHotKeyEnabled       = false
+	DefaultHotKeyWindow        = 1 * time.Second
+	DefaultHotKeyThreshold     = 100
+	DefaultHotKeyTTLMultiplier = 2.0
+)
 
-  - name: "feed-cache"
-    match:
-      pattern: "feed:*"
-    config:
-      ttl: 15s
-      singleflight: true
-      tags: [feeds]
-      hot_key:
-        enabled: true
-        window: 1s
-        threshold: 500
-        ttl_multiplier: 2
+// ===== System Hot Key Limits =====
+const (
+	DefaultMaxTrackedKeys  = 10000
+	DefaultCleanupInterval = 10 * time.Second
+)
 
-  - name: "session-keys"
-    match:
-      pattern: "session:*"
-    config:
-      ttl: 30m
-      singleflight: false
-      hot_key:
-        enabled: false
+// ===== Redis Client Defaults =====
+const (
+	DefaultRedisPort         = 6380
+	DefaultRedisPoolSize     = 100
+	DefaultRedisMinIdleConns = 10
+	DefaultRedisMaxRetries   = 2
+	DefaultDialTimeout       = 5 * time.Second
+	DefaultReadTimeout       = 3 * time.Second
+	DefaultWriteTimeout      = 3 * time.Second
+)
+
+// ===== Server Defaults =====
+const (
+	DefaultHost           = "0.0.0.0"
+	DefaultPort           = 6379
+	DefaultMaxConnections = 10000
+	DefaultServerReadTO   = 30 * time.Second
+	DefaultServerWriteTO  = 30 * time.Second
+)

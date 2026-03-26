@@ -1,7 +1,10 @@
 package policy
 
+import "Aegis/internal/shared"
+
 // the final config which will be passed to all functions
 type RuntimeConfig struct {
+	Global          GlobalConfig
 	PatternPolicies map[string]PolicyConfig
 	TagPolicies     map[string]PolicyConfig
 }
@@ -14,7 +17,9 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 	}
 
 	for _, p := range cfg.Policies {
-		pc := mergeDefaults(cfg.Defaults, p.Config)
+		mergeDefaults(cfg, &p.Config)
+
+		pc := p.Config
 
 		// normalize TTL bounds
 		if pc.MinTTL > 0 && pc.TTL < pc.MinTTL {
@@ -39,19 +44,30 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 }
 
 // merge defaults into policy config
-func mergeDefaults(def DefaultConfig, pc PolicyConfig) PolicyConfig {
+func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	if pc.TTL == 0 {
-		pc.TTL = def.TTL
+		pc.TTL = cfg.Defaults.TTL
 	}
 
 	// prefer explicit, else fallback
 	if !pc.Singleflight {
-		pc.Singleflight = def.Singleflight
+		// auto false if not present
+		pc.Singleflight = cfg.Defaults.Singleflight
 	}
 
-	if !pc.HotKey.Enabled {
-		pc.HotKey = defaultHotKey // if you define one
+	// if hot key is enabled then check and use defaults
+	if pc.HotKey.Enabled {
+		if pc.HotKey.Window == 0 {
+			pc.HotKey.Window = shared.DefaultHotKeyWindow
+		}
+		if pc.HotKey.Threshold == 0 {
+			pc.HotKey.Threshold = shared.DefaultHotKeyThreshold
+		}
+		if pc.HotKey.TTLMultiplier == 0 {
+			pc.HotKey.TTLMultiplier = shared.DefaultHotKeyTTLMultiplier
+		}
 	}
 
-	return pc
+	// do same for all other values like ttl, min_ttl, max_ttl...
+
 }

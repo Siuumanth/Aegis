@@ -16,8 +16,9 @@ redis:
 
 defaults:
   ttl: 60s
-  thundering_herd: true
+  singleflight: true
 
+# these thresholds only global 
 hot_keys:
   max_tracked: 10000        # system-wide memory cap
   cleanup_interval: 10s     # how often stale hot key records are evicted
@@ -31,7 +32,6 @@ policies:
       min_ttl: 5s
       max_ttl: 10m
       singleflight: true
-      tags: [users, profiles]
       hot_key:
         enabled: true
         window: 1s
@@ -44,7 +44,6 @@ policies:
     config:
       ttl: 15s
       singleflight: true
-      tags: [feeds]
       hot_key:
         enabled: true
         window: 1s
