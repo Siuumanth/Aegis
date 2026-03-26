@@ -1,12 +1,20 @@
 package main
 
 import (
+	"Aegis/internal/config"
 	"fmt"
 	"io"
 	"net"
 )
 
 func main() {
+	// yaml parser
+	cfg, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(cfg)
 
 	fmt.Println("Starting AEGIS TCP Server...")
 	// main tcp listen cmd
@@ -17,6 +25,7 @@ func main() {
 	defer ln.Close()
 
 	for {
+
 		// for every connectoin, accept and handle
 		conn, err := ln.Accept()
 		if err != nil {
