@@ -1,7 +1,6 @@
-package config
+package policy
 
 import (
-	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -12,7 +11,7 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Config file:", string(data))
+	//	fmt.Println("Config file:", string(data))
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {

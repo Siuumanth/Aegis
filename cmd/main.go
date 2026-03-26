@@ -1,21 +1,24 @@
 package main
 
 import (
-	"Aegis/internal/config"
+	policy "Aegis/internal/policy"
 	"fmt"
 	"io"
 	"net"
+	"time"
 )
 
 func main() {
 	// yaml parser
-	cfg, err := config.Load()
+	cfg, err := policy.Load()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(policy.BuildRuntimeConfig(cfg))
 
-	fmt.Println(cfg)
+	//fmt.Println(cfg)
 
+	time.Sleep(time.Second * 3)
 	fmt.Println("Starting AEGIS TCP Server...")
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", ":6379")

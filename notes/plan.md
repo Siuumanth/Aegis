@@ -12,60 +12,47 @@ FEATURES and HOW i will implement them for Aegis
 aegis/
 ├── cmd/
 │   └── aegis/
-│       └── main.go          # entry point
-
+│       └── main.go
+│
+├── config/
+│   ├── config.go
+│   └── loader.go
+│
 ├── internal/
-│   ├── server/
-│   │   ├── tcp_server.go    # accepts connections
-│   │   └── handler.go       # per-connection request handling
-│
-│   ├── resp/
-│   │   ├── parser.go        # RESP2 parsing
-│   │   └── encoder.go       # RESP encoding (forwarding responses)
-│
 │   ├── proxy/
-│   │   ├── router.go        # routes commands (GET/SET/AEGIS.*)
-│   │   └── forwarder.go     # sends to Redis
-│
-│   ├── cache/
-│   │   ├── ttl.go           # TTL policy engine
-│   │   ├── swr.go           # stale-while-revalidate logic
-│   │   ├── negative.go      # negative caching
-│   │   └── admission.go     # (optional) cache admission policy
-│
-│   ├── invalidation/
-│   │   ├── tags.go          # tag ↔ key mapping
-│   │   └── handler.go       # AEGIS.INVALIDATE logic
-│
-│   ├── hotkey/
-│   │   └── detector.go      # hot key tracking
-│
+│   │   ├── proxy.go
+│   │   ├── conn.go
+│   │   ├── router.go
+│   │   └── request.go
+│   │
+│   ├── resp/
+│   │   ├── parser.go
+│   │   └── writer.go
+│   │
+│   ├── handlers/
+│   │   ├── get.go
+│   │   ├── set.go
+│   │   ├── del.go
+│   │   ├── aegis.go
+│   │   └── passthrough.go
+│   │
+│   ├── policy/
+│   │   ├── engine.go
+│   │   └── ttl.go
+│   │
+│   ├── tags/
+│   │   └── tags.go
+│   │
+│   ├── hotkeys/
+│   │   └── hotkeys.go
+│   │
 │   ├── singleflight/
-│   │   └── group.go         # wrapper over Go singleflight
+│   │   └── singleflight.go
+│   │
+│   └── redis/
+│       └── client.go
 │
-│   ├── resilience/
-│   │   ├── circuit_breaker.go
-│   │   ├── retry.go
-│   │   └── backpressure.go
-│
-│   ├── config/
-│   │   └── config.go        # YAML loading + structs
-│
-│   ├── metrics/
-│   │   └── prometheus.go    # observability
-│
-│   └── model/
-│       └── command.go       # parsed command struct
-│
-├── pkg/                     # optional (if you expose reusable parts)
-│
-├── configs/
-│   └── config.yaml
-│
-├── scripts/
-│   └── run.sh
-│
-├── go.mod
+├── config.yaml
 └── README.md
 ```
 
