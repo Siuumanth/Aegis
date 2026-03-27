@@ -1,6 +1,9 @@
 package policy
 
-import "Aegis/internal/shared"
+import (
+	"Aegis/internal/shared"
+	"time"
+)
 
 // the final config which will be passed to all functions
 type RuntimeConfig struct {
@@ -69,5 +72,18 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	}
 
 	// do same for all other values like ttl, min_ttl, max_ttl...
+	// but if ttl is not defined, it will be 0 automatically and will be ignored
+	// but lets make a default custom logic
+	// configute ttls
+	pc.TTL = pickDuration(pc.TTL, pickDuration(cfg.Defaults.TTL, shared.DefaultTTL))
+	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, shared.DefaultMinTTL))
+	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, shared.DefaultMaxTTL))
 
+}
+
+func pickDuration(a, b time.Duration) time.Duration {
+	if a != 0 {
+		return a
+	}
+	return b
 }

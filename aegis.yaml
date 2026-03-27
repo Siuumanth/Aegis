@@ -14,8 +14,10 @@ redis:
   write_timeout: 3s
   max_retries: 2
 
+# pattern specific policies can be overridden from defaults
 defaults:
   ttl: 60s
+  min_ttl: 5s
   singleflight: true
 
 # these thresholds only global 

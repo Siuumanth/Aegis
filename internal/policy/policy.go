@@ -37,6 +37,8 @@ type RedisConfig struct {
 // global defaults applied to all matched keys unless overridden
 type DefaultConfig struct {
 	TTL          time.Duration `yaml:"ttl"`
+	MinTTL       time.Duration `yaml:"min_ttl"`
+	MaxTTL       time.Duration `yaml:"max_ttl"`
 	Singleflight bool          `yaml:"singleflight"`
 }
 
