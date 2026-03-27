@@ -5,9 +5,15 @@ import (
 	"time"
 )
 
+// for default and hot keys
+type GlobalConfig struct {
+	HotKeys  HotKeysConfig
+	Defaults DefaultConfig
+}
+
 // the final config which will be passed to all functions
 type RuntimeConfig struct {
-	Global          GlobalConfig
+	GlobalConfig    GlobalConfig
 	PatternPolicies map[string]PolicyConfig
 	TagPolicies     map[string]PolicyConfig
 }
@@ -15,9 +21,13 @@ type RuntimeConfig struct {
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 	rt := &RuntimeConfig{
+		GlobalConfig:    GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
 		PatternPolicies: make(map[string]PolicyConfig),
 		TagPolicies:     make(map[string]PolicyConfig),
 	}
+
+	// set default of global
+	mergeGlobal(&rt.GlobalConfig)
 
 	for _, p := range cfg.Policies {
 		mergeDefaults(cfg, &p.Config)
@@ -48,9 +58,6 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 
 // merge defaults into policy config
 func mergeDefaults(cfg *Config, pc *PolicyConfig) {
-	if pc.TTL == 0 {
-		pc.TTL = cfg.Defaults.TTL
-	}
 
 	// prefer explicit, else fallback
 	if !pc.Singleflight {
@@ -79,6 +86,16 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, shared.DefaultMinTTL))
 	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, shared.DefaultMaxTTL))
 
+}
+
+func mergeGlobal(global *GlobalConfig) {
+	// check hot keys
+	if global.HotKeys.MaxTracked == 0 {
+		global.HotKeys.MaxTracked = shared.DefaultMaxTrackedKeys
+	}
+	if global.HotKeys.CleanupInterval == 0 {
+		global.HotKeys.CleanupInterval = shared.DefaultCleanupInterval
+	}
 }
 
 func pickDuration(a, b time.Duration) time.Duration {

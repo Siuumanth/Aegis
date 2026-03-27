@@ -2,11 +2,6 @@ package policy
 
 import "time"
 
-type GlobalConfig struct {
-	HotKeys  HotKeysConfig
-	Defaults DefaultConfig
-}
-
 // top level config
 type Config struct {
 	Server   ServerConfig  `yaml:"server"`
@@ -35,6 +30,7 @@ type RedisConfig struct {
 }
 
 // global defaults applied to all matched keys unless overridden
+
 type DefaultConfig struct {
 	TTL          time.Duration `yaml:"ttl"`
 	MinTTL       time.Duration `yaml:"min_ttl"`
