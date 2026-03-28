@@ -1,4 +1,4 @@
-package model
+package resp
 
 type Command struct {
 	Name string // GET, SET, AEGIS.*

@@ -1,7 +1,6 @@
-package policy
+package config
 
 import (
-	"Aegis/internal/shared"
 	"time"
 )
 
@@ -68,13 +67,13 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	// if hot key is enabled then check and use defaults
 	if pc.HotKey.Enabled {
 		if pc.HotKey.Window == 0 {
-			pc.HotKey.Window = shared.DefaultHotKeyWindow
+			pc.HotKey.Window = DefaultHotKeyWindow
 		}
 		if pc.HotKey.Threshold == 0 {
-			pc.HotKey.Threshold = shared.DefaultHotKeyThreshold
+			pc.HotKey.Threshold = DefaultHotKeyThreshold
 		}
 		if pc.HotKey.TTLMultiplier == 0 {
-			pc.HotKey.TTLMultiplier = shared.DefaultHotKeyTTLMultiplier
+			pc.HotKey.TTLMultiplier = DefaultHotKeyTTLMultiplier
 		}
 	}
 
@@ -82,19 +81,19 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	// but if ttl is not defined, it will be 0 automatically and will be ignored
 	// but lets make a default custom logic
 	// configute ttls
-	pc.TTL = pickDuration(pc.TTL, pickDuration(cfg.Defaults.TTL, shared.DefaultTTL))
-	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, shared.DefaultMinTTL))
-	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, shared.DefaultMaxTTL))
+	pc.TTL = pickDuration(pc.TTL, pickDuration(cfg.Defaults.TTL, DefaultTTL))
+	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, DefaultMinTTL))
+	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, DefaultMaxTTL))
 
 }
 
 func mergeGlobal(global *GlobalConfig) {
 	// check hot keys
 	if global.HotKeys.MaxTracked == 0 {
-		global.HotKeys.MaxTracked = shared.DefaultMaxTrackedKeys
+		global.HotKeys.MaxTracked = DefaultMaxTrackedKeys
 	}
 	if global.HotKeys.CleanupInterval == 0 {
-		global.HotKeys.CleanupInterval = shared.DefaultCleanupInterval
+		global.HotKeys.CleanupInterval = DefaultCleanupInterval
 	}
 }
 

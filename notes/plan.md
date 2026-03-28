@@ -12,47 +12,54 @@ FEATURES and HOW i will implement them for Aegis
 aegis/
 ├── cmd/
 │   └── aegis/
-│       └── main.go
+│       └── main.go              # entry point, wires all packages, starts proxy
 │
 ├── config/
-│   ├── config.go
-│   └── loader.go
+│   ├── config.go                # raw yaml structs (Config, Policy, ServerConfig etc)
+│   ├── loader.go                # reads yaml file → Config struct
+│   ├── defaults.go              # default constants (DefaultTTL, DefaultThreshold etc)
+│   └── runtime.go               # BuildRuntimeConfig, mergeDefaults, mergeGlobal
 │
 ├── internal/
+│   │
 │   ├── proxy/
-│   │   ├── proxy.go
-│   │   ├── conn.go
-│   │   ├── router.go
-│   │   └── request.go
+│   │   ├── proxy.go             # TCP listener, accepts connections, spawns goroutines
+│   │   ├── conn.go              # per-connection read loop, feeds commands to router
+│   │   ├── router.go            # policy match once, routes to correct handler
+│   │   └── request.go           # Request struct {Cmd, Policy, Conn}
 │   │
 │   ├── resp/
-│   │   ├── parser.go
-│   │   └── writer.go
+│   │   ├── parser.go            # raw bytes → Command{Name, Key, Args, Raw}
+│   │   └── writer.go            # results → RESP2 bytes back to client
 │   │
 │   ├── handlers/
-│   │   ├── get.go
-│   │   ├── set.go
-│   │   ├── del.go
-│   │   ├── aegis.go
-│   │   └── passthrough.go
+│   │   ├── get.go               # singleflight → redis.Get → hotkeys.Track (async)
+│   │   ├── set.go               # ResolveTTL → redis.Set → tags.Register
+│   │   ├── del.go               # redis.Del → tags.Cleanup
+│   │   ├── aegis.go             # AEGIS.INVALIDATE and future AEGIS.* commands
+│   │   └── passthrough.go       # pipe raw bytes to redis, pipe response back
 │   │
 │   ├── policy/
-│   │   ├── engine.go
-│   │   └── ttl.go
+│   │   ├── engine.go            # Match(key) → *PolicyConfig, pattern + tag matching
+│   │   └── ttl.go               # ResolveTTL, ClampTTL, ExtendTTL (pure functions)
 │   │
 │   ├── tags/
-│   │   └── tags.go
+│   │   └── tags.go              # SADD on set, SREM on del, Lua invalidation on AEGIS.*
 │   │
 │   ├── hotkeys/
-│   │   └── hotkeys.go
+│   │   ├── hotkeys.go           # sync.Map counter, IsHot check, ExtendTTL via redis
+│   │   └── worker.go            # fixed worker pool, buffered channel, processes Track()
 │   │
 │   ├── singleflight/
-│   │   └── singleflight.go
+│   │   └── singleflight.go      # thin wrapper over golang.org/x/sync/singleflight
 │   │
-│   └── redis/
-│       └── client.go
+│   ├── redis/
+│   │   └── client.go            # RedisBackend interface + go-redis implementation
+│   │
+│   └── errors/
+│       └── errors.go            # sentinel errors (ErrNoPolicy, ErrInvalidCommand etc)
 │
-├── config.yaml
+├── config.yaml                  # example config with all options documented
 └── README.md
 ```
 

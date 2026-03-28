@@ -1,3 +1,153 @@
+**Request Flow:**
+
+```
+client
+  ↓
+resp/parser.go
+  → reads raw bytes from conn
+  → returns Command{Name, Key, Args, Raw}
+  ↓
+proxy/router.go
+  → policy.engine.Match(cmd.Key) → *PolicyConfig (nil if no match)
+  → builds Request{Cmd, Policy, Conn}
+  → switch cmd.Name
+      GET        → handlers.HandleGET(req)
+      SET        → handlers.HandleSET(req)
+      DEL        → handlers.HandleDEL(req)
+      AEGIS.*    → handlers.HandleAegis(req)
+      default    → handlers.Passthrough(req)
+  ↓
+handlers/
+  GET:
+    singleflight.Do(key, redis.Get)
+    → redis.Get(key)
+    → resp.Write(result)
+    → hotkeys.Track(key)        ← async, worker pool
+
+  SET:
+    policy.ResolveTTL(req.Policy, cmd.ClientTTL)
+    → redis.Set(key, value, ttl)
+    → tags.Register(key, policy.Tags, cmd.ATags)
+    → resp.Write(OK)
+
+  DEL:
+    redis.Del(key)
+    → tags.Cleanup(key)
+    → resp.Write(result)
+
+  AEGIS.INVALIDATE:
+    tags.Invalidate(tagname)    ← Lua script
+    → resp.Write(count)
+
+  PASSTHROUGH:
+    pipe req.Raw → redis
+    → pipe response → client
+```
+
+---
+
+**Package Structure:**
+
+```
+aegis/
+├── cmd/
+│   └── aegis/
+│       └── main.go
+│
+├── config/
+│   ├── config.go        # raw yaml structs
+│   ├── loader.go        # yaml → Config
+│   ├── defaults.go      # default constants
+│   └── runtime.go       # BuildRuntimeConfig, mergeDefaults
+│
+├── internal/
+│   ├── proxy/
+│   │   ├── proxy.go     # TCP listener
+│   │   ├── conn.go      # per-connection goroutine, read loop
+│   │   ├── router.go    # policy match, route to handler
+│   │   └── request.go   # Request{Cmd, Policy, Conn}
+│   │
+│   ├── resp/
+│   │   ├── parser.go    # bytes → Command
+│   │   └── writer.go    # results → bytes
+│   │
+│   ├── handlers/
+│   │   ├── get.go
+│   │   ├── set.go
+│   │   ├── del.go
+│   │   ├── aegis.go
+│   │   └── passthrough.go
+│   │
+│   ├── policy/
+│   │   ├── engine.go    # Match(key) → *PolicyConfig
+│   │   └── ttl.go       # ResolveTTL, ClampTTL, ExtendTTL
+│   │
+│   ├── tags/
+│   │   └── tags.go      # Register, Cleanup, Invalidate (Lua)
+│   │
+│   ├── hotkeys/
+│   │   ├── hotkeys.go   # Increment, IsHot, ExtendTTL
+│   │   └── worker.go    # worker pool, buffered channel
+│   │
+│   ├── singleflight/
+│   │   └── singleflight.go
+│   │
+│   └── redis/
+│       └── client.go    # RedisBackend interface + go-redis impl
+│
+├── internal/
+│   └── errors/
+│       └── errors.go    # ErrNoPolicy, ErrInvalidCommand etc
+│
+├── config.yaml
+└── README.md
+```
+
+---
+
+**Import direction:**
+
+```
+main.go
+  → config, proxy
+
+proxy/router.go
+  → policy, handlers, resp
+
+handlers/*
+  → policy/ttl, tags, hotkeys, singleflight, redis, resp
+
+policy/engine.go
+  → config
+
+tags/
+  → redis
+
+hotkeys/
+  → redis
+
+redis/
+  → go-redis (external only)
+
+errors/
+  → nothing (leaf package)
+```
+
+---
+
+Two things to fix in your current code:
+
+`internal/` appears twice in your folder — `errors` should be inside the same `internal/`, not a second one.
+
+`config/runtime.go` handles `BuildRuntimeConfig` — `policy/engine.go` reads from the result of that. So `main.go` calls `config.BuildRuntimeConfig` first, then passes it to `policy.NewEngine(rt)`. Engine never touches raw yaml, only the built runtime config.
+
+
+
+
+
+
+
+
 #### Chain will look like:
 
 ```

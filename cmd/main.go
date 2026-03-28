@@ -1,7 +1,6 @@
 package main
 
 import (
-	policy "Aegis/internal/policy"
 	"fmt"
 	"io"
 	"net"
@@ -10,11 +9,11 @@ import (
 
 func main() {
 	// yaml parser
-	cfg, err := policy.Load()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(policy.BuildRuntimeConfig(cfg))
+	// cfg, err := policy.Load()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(policy.BuildRuntimeConfig(cfg))
 
 	//fmt.Println(cfg)
 

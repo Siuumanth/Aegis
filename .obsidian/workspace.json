@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "notes/plan.md",
+                "file": "notes/flows.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "plan"
+              "title": "flows"
             }
           }
         ]
@@ -182,21 +182,20 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
-    "internal/shared/policyFieds.go",
-    "internal/shared",
-    "internal/policy/cleanConfig.go",
-    "internal/tags",
-    "notes/flows.md",
-    "internal/proxy/router.go",
+    "notes/plan.md",
     "internal/policy/policy.go",
-    "internal/policy/strcuts.go",
-    "internal/policy/loadYAML.go",
-    "internal/policy",
+    "internal/policy/ttl/ttl.go",
+    "internal/policy/ttl",
+    "internal/proxy/ttl/ttl.go",
+    "internal/proxy/ttl",
+    "config/config_structs.go",
+    "config/config-struct.go",
+    "config/runtime.go",
+    "config/defaults.go",
+    "config/policyFieds.go",
+    "notes/flows.md",
     "README.md",
     "notes/0-tcpNresp.md",
-    "notes/0-tcpNresp",
-    "plan.md",
-    "notes/plan.md",
-    "notes"
+    "plan.md"
   ]
 }
