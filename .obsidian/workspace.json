@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "1f977ffaa307f8ad",
@@ -94,7 +95,8 @@
             "state": {
               "type": "backlink",
               "state": {
-                "collapseAll": false,
+                "file": "notes/flows.md",
+                "collapseAll": true,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
                 "showSearch": false,
@@ -103,7 +105,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for flows"
             }
           },
           {
@@ -166,7 +168,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
+    "width": 200,
     "collapsed": true
   },
   "left-ribbon": {
@@ -182,18 +184,20 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
+    "internal/policy/engine.go",
+    "config/resolve.go",
+    "config/runtime.go",
+    "internal/policy/runtime.go",
     "notes/plan.md",
+    "notes/tags.md.md",
+    "notes/flows.md",
+    "hotkey",
     "internal/policy/policy.go",
     "internal/policy/ttl/ttl.go",
     "internal/policy/ttl",
     "internal/proxy/ttl/ttl.go",
     "internal/proxy/ttl",
     "config/config_structs.go",
-    "config/config-struct.go",
-    "config/runtime.go",
-    "config/defaults.go",
-    "config/policyFieds.go",
-    "notes/flows.md",
     "README.md",
     "notes/0-tcpNresp.md",
     "plan.md"
