@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"Aegis/config"
+	"Aegis/internal/handler"
 	"Aegis/internal/policy"
 	"Aegis/internal/resp"
 	"net"
@@ -13,9 +14,12 @@ type Request struct {
 	Conn   net.Conn
 }
 
+// Dependencies ≠ per-request data
+// struct shud hold depenedices
 type Router struct {
-	cfg    *config.RuntimeConfig
-	policy *policy.Engine
+	cfg     *config.RuntimeConfig
+	policy  *policy.Engine
+	handler *handler.Handler
 }
 
 // the router matches pattern and then routes it
