@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -42,7 +41,7 @@ func (p *Parser) Parse() (*Command, error) {
 	if len(args) > 2 {
 		cmd.Args = args[2:]
 	}
-	PrintCommand(cmd, os.Stdout)
+	//	PrintCommand(cmd, os.Stdout)
 
 	return cmd, nil
 }
@@ -55,7 +54,7 @@ func PrintCommand(cmd *Command, w io.Writer) error {
 		args = append(args, cmd.Key)
 	}
 	args = append(args, cmd.Args...)
-	if _, err := fmt.Fprintf(w, "%s %s\r\n", cmd.Name, strings.Join(args, " ")); err != nil {
+	if _, err := fmt.Fprintf(w, "the input command is %s\r\n", strings.Join(args, " ")); err != nil {
 		return err
 	}
 	return nil

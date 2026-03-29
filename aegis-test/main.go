@@ -15,40 +15,46 @@ func main() {
 
 	// Connect to AEGIS on 6379
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr:         "localhost:6379",
+		Protocol:     2,
+		WriteTimeout: 100 * time.Millisecond,
+		ReadTimeout:  100 * time.Millisecond,
 	})
 
 	fmt.Println("Starting continuous cache Test on Aegis...")
 	var total time.Duration
+	count := 100
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < count; i++ {
 		start := time.Now()
 
-		key := fmt.Sprintf("user:%d", rand.Intn(100)) // Rotate through 100 keys
+		key := fmt.Sprintf("user:%d", rand.Intn(100))
 		val := fmt.Sprintf("data-%d", i)
 
-		// 1. SET
-		err := rdb.Set(ctx, key, val, 10*time.Second).Err()
+		// SET with expiry (EX 10 seconds)
+		err := rdb.Do(ctx, "SET", key, val, "EX", 10).Err()
 		if err != nil {
 			fmt.Printf("SET Error: %v\n", err)
-		} else {
-			//fmt.Printf("[%d] SET %s -> %s\n", i, key, val)
+			continue
 		}
 
-		// 2. GET
-		_, err = rdb.Get(ctx, key).Result()
+		// GET
+		_, err = rdb.Do(ctx, "GET", key).Result()
 		if err != nil {
 			fmt.Printf("GET Error: %v\n", err)
-		} else {
-			//	fmt.Printf("[%d] GET %s -> %s\n", i, key, getVal)
 		}
+
 		end := time.Since(start)
-		log.Println(end)
+		if i == 0 {
+			continue
+		}
+		//log.Println(end)
+		// if firs time then skip
+
 		total += end
-		// Small sleep so you can actually read the logs
-		time.Sleep(500 * time.Millisecond)
+
+		//time.Sleep(500 * time.Millisecond)
 	}
 
-	log.Println("AVERAGE TIME IS ", total/time.Duration(10))
-
+	log.Println("AVERAGE TIME IS ", total/time.Duration(count))
 }

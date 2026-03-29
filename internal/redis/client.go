@@ -31,6 +31,7 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) {
 }
 
 func (c *Client) Set(ctx context.Context, key string, value string, ttl time.Duration) error {
+	//.Println("SETing key", key, value, ttl)
 	return c.rdb.Set(ctx, key, value, ttl).Err()
 }
 

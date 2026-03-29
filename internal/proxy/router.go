@@ -7,6 +7,7 @@ import (
 	"Aegis/internal/resp"
 	"Aegis/internal/types"
 	"context"
+	"fmt"
 	"net"
 	"strings"
 )
@@ -47,6 +48,14 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		return r.handler.Get(req)
 	case "SET":
 		return r.handler.Set(req)
+	case "HELLO":
+		conn.Write([]byte("*2\r\n$6\r\nserver\r\n$5\r\nredis\r\n"))
+		return nil
+	case "CLIENT":
+		conn.Write([]byte("+OK\r\n"))
+		return nil
+	default:
+		fmt.Println("Unknown command:", cmd.Name)
 		// case "DEL":
 		// 	return r.handler.Del(req)
 		// case "AEGIS.INVALIDATE":

@@ -1,6 +1,10 @@
 package handler
 
-import "Aegis/internal/types"
+import (
+	"Aegis/internal/types"
+	"context"
+	"fmt"
+)
 
 // define get handler:
 /*
@@ -12,5 +16,15 @@ GET:
 */
 
 func (h *Handler) Get(req *types.Request) error {
-	return nil
+	val, err := h.redis.Get(context.TODO(), req.Cmd.Key)
+	if err != nil {
+		req.Conn.Write([]byte("$-1\r\n")) // nil
+		return nil
+	}
+
+	// RESP bulk string
+	resp := fmt.Sprintf("$%d\r\n%s\r\n", len(val), val)
+	req.Conn.Write([]byte(resp))
+
+	return err
 }

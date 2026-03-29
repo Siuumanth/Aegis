@@ -25,7 +25,13 @@ func (h *Handler) Set(req *types.Request) error {
 	ttl := policy.ResolveTTL(req.Policy, clientTTL)
 
 	// TODO
-	h.redis.Set(context.TODO(), req.Cmd.Key, req.Cmd.Args[1], ttl)
+	value := req.Cmd.Args[0]
+	err := h.redis.Set(context.TODO(), req.Cmd.Key, value, ttl)
+	if err != nil {
+		return err
+	}
+	// send Redis-style OK
+	req.Conn.Write([]byte("+OK\r\n"))
 
 	return nil
 }
