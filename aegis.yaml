@@ -34,6 +34,7 @@ policies:
       min_ttl: 5s
       max_ttl: 10m
       singleflight: true
+      tags: [users,profile]
       hot_key:
         enabled: true
         window: 1s
@@ -46,6 +47,7 @@ policies:
     config:
       ttl: 15s
       singleflight: true
+      tags: [feed]
       hot_key:
         enabled: true
         window: 1s

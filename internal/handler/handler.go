@@ -2,8 +2,9 @@ package handler
 
 import sf "Aegis/internal/singleflight"
 
-// handler structs holds all dependencies
 type Handler struct {
+	// hotkeys *hotkeys.HotKeys
+	//tags *tags.Tags
 	sf sf.Group
 }
 

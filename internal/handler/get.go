@@ -1,5 +1,7 @@
 package handler
 
+import "Aegis/internal/types"
+
 // define get handler:
 /*
 GET:
@@ -8,3 +10,7 @@ GET:
     → resp.Write(result)
     → hotkeys.Track(key)        ← async, worker pool
 */
+
+func (h *Handler) Get(req *types.Request) error {
+	return nil
+}

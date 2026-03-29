@@ -3,7 +3,7 @@ package policy
 import (
 	"Aegis/config"
 	"Aegis/internal/resp"
-	"strings"
+	"path"
 )
 
 // this respnsible for matching the pattern
@@ -28,15 +28,18 @@ func NewEngine(cfg *config.RuntimeConfig) *Engine {
 func (e *Engine) Match(cmd *resp.Command) *config.PolicyConfig {
 	// match policy to pattern, user:*
 	// loop over cfgs policies
-
+	// handles cases like users:*:profiles
 	for pattern, policy := range e.cfg.PatternPolicies {
-		prefix := strings.TrimSuffix(pattern, "*")
-
-		if strings.HasPrefix(cmd.Key, prefix) {
-			return &policy
+		matched, err := path.Match(pattern, cmd.Key)
+		if err != nil {
+			// invalid pattern, skip
+			continue
+		}
+		if matched {
+			// return copy, not pointer to map value
+			pc := policy
+			return &pc
 		}
 	}
-
-	return nil // no matches, blank
-
+	return nil
 }
