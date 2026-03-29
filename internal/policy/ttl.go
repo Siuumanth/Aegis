@@ -29,13 +29,3 @@ func ClampTTL(pc *config.PolicyConfig, ttl time.Duration) time.Duration {
 	}
 	return ttl
 }
-
-// ExtendTTL multiplies current TTL by the hot key multiplier.
-// Used when a key is detected as hot.
-func ExtendTTL(pc *config.PolicyConfig, currentTTL time.Duration) time.Duration {
-	if pc.HotKey.TTLMultiplier <= 1 {
-		return currentTTL
-	}
-	extended := time.Duration(float64(currentTTL) * pc.HotKey.TTLMultiplier)
-	return ClampTTL(pc, extended)
-}

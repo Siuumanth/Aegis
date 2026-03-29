@@ -62,12 +62,12 @@ type PolicyConfig struct {
 	MaxTTL       time.Duration `yaml:"max_ttl"`
 	Singleflight bool          `yaml:"singleflight"`
 	Tags         []string      `yaml:"tags"`
-	HotKey       HotKeyPolicy  `yaml:"hot_key"`
+	HotKeys      HotKeyPolicy  `yaml:"hot_key"`
 }
 
 type HotKeyPolicy struct {
 	Enabled       bool          `yaml:"enabled"`
 	Window        time.Duration `yaml:"window"`
-	Threshold     int           `yaml:"threshold"`
+	Threshold     int64         `yaml:"threshold"`
 	TTLMultiplier float64       `yaml:"ttl_multiplier"`
 }

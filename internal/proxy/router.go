@@ -41,7 +41,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		Conn:   conn,
 	}
 	// request is all  the downstream processes need to know to match
-	// 2. routing decision happens in handler layer (not here)
+	// 2. routing decision based on cmd
 
 	switch strings.ToUpper(cmd.Name) {
 	case "GET":

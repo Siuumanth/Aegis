@@ -40,6 +40,7 @@ policies:
         window: 1s
         threshold: 100
         ttl_multiplier: 3
+        min_extend_interval: 30s  # don't re-extend more than once per 30s
 
   - name: "feed-cache"
     match:

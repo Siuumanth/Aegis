@@ -183,6 +183,8 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
+    "internal/hotkeys/hotkeys.go",
+    "internal/hotkeys/helpers.go",
     "notes/0-tcpNresp.md",
     "notes/bufio.md",
     "notes/plan.md",
@@ -196,7 +198,6 @@
     "internal/types/request.go",
     "internal/types",
     "internal/types.go",
-    "internal/tags/tags.go",
     "notes/tags.md.md",
     "README.md",
     "plan.md"

@@ -35,9 +35,8 @@ func main() {
 	redisClient := redis.NewClient("localhost:6380")
 
 	// 2. the handler needs the client to access redis
-	h := handler.NewHandler(redisClient) // TODO: add tags and hotkeys
-
 	// 3. the router needs the policy engine and handler
+	h := handler.NewHandler(redisClient) // TODO: add tags and hotkeys
 	p := policy.NewEngine(cfg)
 
 	// 4. create the router
@@ -52,6 +51,7 @@ func main() {
 		panic(err)
 	}
 	defer ln.Close()
+	fmt.Println("AEGIS TCP Server started...")
 
 	for {
 		// for every connectoin, accept and handle

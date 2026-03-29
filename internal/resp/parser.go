@@ -54,6 +54,7 @@ func PrintCommand(cmd *Command, w io.Writer) error {
 		args = append(args, cmd.Key)
 	}
 	args = append(args, cmd.Args...)
+	// TODO: fix this
 	if _, err := fmt.Fprintf(w, "the input command is %s\r\n", strings.Join(args, " ")); err != nil {
 		return err
 	}
@@ -63,7 +64,8 @@ func PrintCommand(cmd *Command, w io.Writer) error {
 /*
 CMD: SET user:1 "john"
 
-RESP2
+RESP2 looks like:
+
 *3\r\n
 $3\r\n
 SET\r\n

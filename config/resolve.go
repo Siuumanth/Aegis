@@ -64,16 +64,16 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 		pc.Singleflight = cfg.Defaults.Singleflight
 	}
 
-	// if hot key is enabled then check and use defaults
-	if pc.HotKey.Enabled {
-		if pc.HotKey.Window == 0 {
-			pc.HotKey.Window = DefaultHotKeyWindow
+	// if hot key is enabled then chesck and use defaults
+	if pc.HotKeys.Enabled {
+		if pc.HotKeys.Window == 0 {
+			pc.HotKeys.Window = DefaultHotKeyWindow
 		}
-		if pc.HotKey.Threshold == 0 {
-			pc.HotKey.Threshold = DefaultHotKeyThreshold
+		if pc.HotKeys.Threshold == 0 {
+			pc.HotKeys.Threshold = DefaultHotKeyThreshold
 		}
-		if pc.HotKey.TTLMultiplier == 0 {
-			pc.HotKey.TTLMultiplier = DefaultHotKeyTTLMultiplier
+		if pc.HotKeys.TTLMultiplier == 0 {
+			pc.HotKeys.TTLMultiplier = DefaultHotKeyTTLMultiplier
 		}
 	}
 
