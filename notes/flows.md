@@ -1,5 +1,40 @@
 **Request Flow:**
 
+```go
+main.go
+  → load config
+  → build RuntimeConfig
+  → init redis client
+  → init tags, hotkeys
+  → init handler (redis, tags, hotkeys)
+  → init router (config, handler)
+  → start TCP listener (proxy.go)
+      ↓
+  new client connects
+      ↓
+  conn.go (per goroutine)
+  → create context
+  → parse loop
+      ↓
+  resp/parser.go
+  → bytes → Command{Name, Key, Args, Raw}
+      ↓
+  proxy/router.go
+  → policy.Match(cmd.Key) → *PolicyConfig
+  → switch cmd.Name
+      ↓
+  handlers/
+  GET  → singleflight → redis.Get → async hotkeys.Track
+  SET  → ResolveTTL → redis.Set → tags.Register
+  DEL  → redis.Del
+  AEGIS.INVALIDATE → tags.Invalidate (Lua)
+  default → passthrough raw bytes
+      ↓
+  resp/writer.go
+  → write response back to client conn
+```
+
+
 ```
 client
   ↓
@@ -229,22 +264,6 @@ policies
 
 
 
-
-
-
-**Best of both worlds — support both:**
-
-```
-yaml tags   → default membership, applied automatically on SET if pattern matches
-ATAG        → runtime override, app can add extra tags beyond what yaml defines
-```
-gf
-```
-PARSE request
-→ identify command
-→ match policy (pattern or tag)
-→ route to handler
-```
 
 ---
 **GET**

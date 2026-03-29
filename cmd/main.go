@@ -1,23 +1,50 @@
 package main
 
 import (
+	"Aegis/config"
+	"Aegis/internal/handler"
+	"Aegis/internal/policy"
+	"Aegis/internal/proxy"
+	"Aegis/internal/redis"
+	"Aegis/internal/resp"
 	"fmt"
-	"io"
 	"net"
-	"time"
 )
 
+/*
+1. load config
+2. build redis client
+3. build tags, hotkeys
+4. build handler
+5. build policy engine
+6. build router
+7. start TCP listener → on each Accept() → NewConn(conn, router) → go conn.Handle()
+*/
 func main() {
 	// yaml parser
-	// cfg, err := policy.Load()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println(policy.BuildRuntimeConfig(cfg))
+	yaml, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
 
-	//fmt.Println(cfg)
+	cfg := config.BuildRuntimeConfig(yaml)
+	fmt.Println(cfg)
 
-	time.Sleep(time.Second * 3)
+	// build dependencies
+	// 1. new redis backend client
+	redisClient := redis.NewClient("localhost:6380")
+
+	// 2. the handler needs the client to access redis
+	h := handler.NewHandler(redisClient) // TODO: add tags and hotkeys
+
+	// 3. the router needs the policy engine and handler
+	p := policy.NewEngine(cfg)
+
+	// 4. create the router
+	router := proxy.NewRouter(cfg, h, p)
+
+	// start server and for each connection, handle it
+
 	fmt.Println("Starting AEGIS TCP Server...")
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", ":6379")
@@ -27,30 +54,21 @@ func main() {
 	defer ln.Close()
 
 	for {
-
 		// for every connectoin, accept and handle
 		conn, err := ln.Accept()
 		if err != nil {
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, router)
 	}
 }
 
 // client = connection from app
-func handleConnection(client net.Conn) {
-	defer client.Close()
+func handleConnection(conn net.Conn, r *proxy.Router) {
 
-	// accept conn, forward to redis
-	redisConn, err := net.Dial("tcp", "localhost:6380")
-	if err != nil {
-		return
-	}
-	defer redisConn.Close()
+	parser := resp.NewParser(conn)
+	// get new connection
+	pconn := proxy.NewConn(conn, r, parser)
 
-	// Bidirectional forwarding
-	// 1. read from redis, write to client
-	go io.Copy(redisConn, client)
-	// 2. read from client, write to redis
-	io.Copy(client, redisConn)
+	pconn.Handle()
 }

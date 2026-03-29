@@ -1,13 +1,20 @@
 package handler
 
-import sf "Aegis/internal/singleflight"
+import (
+	"Aegis/internal/redis"
+	sf "Aegis/internal/singleflight"
+)
 
 type Handler struct {
 	// hotkeys *hotkeys.HotKeys
 	//tags *tags.Tags
-	sf sf.Group
+	redis redis.Backend
+	sf    *sf.Group
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(cli redis.Backend) *Handler {
+	return &Handler{
+		redis: cli,
+		sf:    &sf.Group{},
+	}
 }

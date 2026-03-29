@@ -3,6 +3,7 @@ package handler
 import (
 	"Aegis/internal/policy"
 	"Aegis/internal/types"
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -21,9 +22,10 @@ func (h *Handler) Set(req *types.Request) error {
 	clientTTL := parseClientTTL(req.Cmd.Args)
 
 	// resolve final TTL against policy bounds
-	_ = policy.ResolveTTL(req.Policy, clientTTL)
+	ttl := policy.ResolveTTL(req.Policy, clientTTL)
 
-	// TODO: redis.Set(cmd.Key, value, ttl)
+	// TODO
+	h.redis.Set(context.TODO(), req.Cmd.Key, req.Cmd.Args[1], ttl)
 
 	return nil
 }

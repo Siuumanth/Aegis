@@ -6,6 +6,7 @@ import (
 	"Aegis/internal/policy"
 	"Aegis/internal/resp"
 	"Aegis/internal/types"
+	"context"
 	"net"
 	"strings"
 )
@@ -19,16 +20,16 @@ type Router struct {
 }
 
 // the router matches pattern and then routes it
-func NewRouter(cfg *config.RuntimeConfig) *Router {
-	engine := policy.NewEngine(cfg)
+func NewRouter(cfg *config.RuntimeConfig, h *handler.Handler, p *policy.Engine) *Router {
 	return &Router{
-		cfg:    cfg,
-		policy: engine,
+		cfg:     cfg,
+		policy:  p,
+		handler: h,
 	}
 }
 
 // match policy, route based on cmd
-func (r *Router) Route(cmd *resp.Command, conn net.Conn) error {
+func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) error {
 
 	// 1. match policy
 	match := r.policy.Match(cmd)

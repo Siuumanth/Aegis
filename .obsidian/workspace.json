@@ -78,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "1f977ffaa307f8ad",
@@ -184,22 +183,22 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
+    "notes/0-tcpNresp.md",
+    "notes/bufio.md",
+    "notes/plan.md",
+    "notes/flows.md",
+    "internal/proxy/conn.go",
+    "internal/proxy/forward.go",
+    "internal/proxy/passthroue",
+    "internal/redis/client.go",
+    "internal/redis/redis.go",
+    "internal/redis",
     "internal/types/request.go",
     "internal/types",
     "internal/types.go",
     "internal/tags/tags.go",
-    "internal/tags/tgs.go",
-    "internal/policy/ttl.go",
-    "internal/handler/set.go",
-    "internal/handler/get.go",
-    "internal/hotkeys/hotkey.go",
-    "internal/hotkeys",
-    "internal/hotkey",
-    "notes/plan.md",
     "notes/tags.md.md",
-    "notes/flows.md",
     "README.md",
-    "notes/0-tcpNresp.md",
     "plan.md"
   ]
 }
