@@ -24,6 +24,7 @@ func main() {
 	fmt.Println("Starting continuous cache Test on Aegis...")
 	var total time.Duration
 	count := 100
+	//	exp := 20
 
 	for i := 0; i < count; i++ {
 		start := time.Now()
@@ -32,7 +33,8 @@ func main() {
 		val := fmt.Sprintf("data-%d", i)
 
 		// SET with expiry (EX 10 seconds)
-		err := rdb.Do(ctx, "SET", key, val, "EX", 10).Err()
+		//err := rdb.Do(ctx, "SET", key, val, "EX", exp).Err()
+		err := rdb.Do(ctx, "SET", key, val).Err()
 		if err != nil {
 			fmt.Printf("SET Error: %v\n", err)
 			continue
