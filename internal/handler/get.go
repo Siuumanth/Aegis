@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"Aegis/internal/types"
+	"Aegis/internal/resp"
+	"Aegis/internal/shared"
 	"context"
-	"fmt"
 )
 
 // define get handler:
@@ -15,16 +15,37 @@ GET:
     → hotkeys.Track(key)        ← async, worker pool
 */
 
-func (h *Handler) Get(req *types.Request) error {
-	val, err := h.redis.Get(context.TODO(), req.Cmd.Key)
-	if err != nil {
-		req.Conn.Write([]byte("$-1\r\n")) // nil
-		return nil
+func (h *Handler) Get(req *Request) error {
+	// 1. Send singleflight
+	var (
+		val string
+		err error
+	)
+	ctx := context.TODO()
+	if h.sf != nil {
+		var result any
+		result, err = h.sf.Do(ctx, req.Cmd.Key, func() (any, error) {
+			return h.redis.Get(ctx, req.Cmd.Key)
+		})
+		if err == nil {
+			val = result.(string)
+		}
+	} else {
+		val, err = h.redis.Get(ctx, req.Cmd.Key)
 	}
 
-	// RESP bulk string
-	resp := fmt.Sprintf("$%d\r\n%s\r\n", len(val), val)
-	req.Conn.Write([]byte(resp))
+	if err != nil {
+		if err == shared.ErrGoRedisNil {
+			return resp.WriteNull(req.Conn)
+		}
+		return resp.WriteError(req.Conn, shared.ErrBackend)
+	}
 
-	return err
+	// track hot key async, nil safe
+	if h.hotkeys != nil {
+		h.hotkeys.Track(req.Cmd.Key, req.Policy)
+	}
+
+	// 2. Send response
+	return resp.WriteString(req.Conn, val)
 }

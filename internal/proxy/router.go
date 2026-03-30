@@ -5,7 +5,6 @@ import (
 	"Aegis/internal/handler"
 	"Aegis/internal/policy"
 	"Aegis/internal/resp"
-	"Aegis/internal/types"
 	"context"
 	"fmt"
 	"net"
@@ -35,7 +34,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	// 1. match policy
 	match := r.policy.Match(cmd)
 
-	req := &types.Request{
+	req := &handler.Request{
 		Cmd:    cmd,
 		Policy: match,
 		Conn:   conn,

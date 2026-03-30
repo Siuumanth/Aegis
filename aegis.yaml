@@ -26,9 +26,12 @@ hot_keys:
   cleanup_interval: 10s     # how often stale hot key records are checked
   stale_after: 1m
 
+# TODO: modify this and think it true
 aegis:
   tags: true
   hot_keys: true
+  singleflight: true
+  metrics: true
 
 policies:
   - name: "user-profiles"

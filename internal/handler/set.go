@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Aegis/internal/policy"
-	"Aegis/internal/types"
 	"context"
 	"strconv"
 	"strings"
@@ -17,7 +16,7 @@ SET:
     → resp.Write(OK)
 */
 
-func (h *Handler) Set(req *types.Request) error {
+func (h *Handler) Set(req *Request) error {
 	// parse client TTL from args if provided (EX 300)
 	clientTTL := parseClientTTL(req.Cmd.Args)
 
