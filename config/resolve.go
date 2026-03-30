@@ -4,27 +4,30 @@ import (
 	"time"
 )
 
-// TODO: update defaults and resolving
-// TODO: Default stale after is multiplier * TTL
 // for default and hot keys
 type GlobalConfig struct {
-	HotKeys  HotKeysConfig
-	Defaults DefaultConfig
+	HotKeys  *HotKeysConfig
+	Defaults *DefaultConfig
 }
 
 // the final config which will be passed to all functions
 type RuntimeConfig struct {
 	GlobalConfig    *GlobalConfig
 	PatternPolicies map[string]PolicyConfig
-	TagPolicies     map[string]PolicyConfig
 }
 
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
+	if cfg.Aegis == nil {
+		cfg.Aegis = &Aegis{}
+	}
+	// first step, check if features are true
+	if !cfg.Aegis.HotKeys {
+		cfg.HotKeys = nil
+	}
 	rt := &RuntimeConfig{
 		GlobalConfig:    &GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
 		PatternPolicies: make(map[string]PolicyConfig),
-		TagPolicies:     make(map[string]PolicyConfig),
 	}
 
 	// set default of global
@@ -42,16 +45,23 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 		if pc.MaxTTL > 0 && pc.TTL > pc.MaxTTL {
 			pc.TTL = pc.MaxTTL
 		}
+		// boool defaults to false so thats good
+		// check aegis features enabled or not and make it nil
+		if !cfg.Aegis.HotKeys {
+			pc.HotKeys = nil
+		}
+		if !cfg.Aegis.Tags {
+			pc.Tags = nil
+		}
+		if !cfg.Aegis.Singleflight {
+			pc.Singleflight = false
+		}
 
 		// pattern-based
 		if p.Match.Pattern != "" {
 			rt.PatternPolicies[p.Match.Pattern] = pc
 		}
 
-		// tag-based
-		if p.Match.Tag != "" {
-			rt.TagPolicies[p.Match.Tag] = pc
-		}
 	}
 
 	return rt
@@ -63,11 +73,11 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	// prefer explicit, else fallback
 	if !pc.Singleflight {
 		// auto false if not present
-		pc.Singleflight = cfg.Defaults.Singleflight
+		pc.Singleflight = DefaultSingleflightEnabled
 	}
 
 	// if hot key is enabled then chesck and use defaults
-	if pc.HotKeys.Enabled {
+	if pc.HotKeys != nil && pc.HotKeys.Enabled {
 		if pc.HotKeys.Window == 0 {
 			pc.HotKeys.Window = DefaultHotKeyWindow
 		}
@@ -76,6 +86,15 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 		}
 		if pc.HotKeys.TTLMultiplier == 0 {
 			pc.HotKeys.TTLMultiplier = DefaultHotKeyTTLMultiplier
+		}
+		// min extend interval and stale after
+		if pc.HotKeys.MinExtendInterval == 0 && cfg.HotKeys != nil {
+			// give the global value if not assigned
+			pc.HotKeys.MinExtendInterval = cfg.HotKeys.MinExtendInterval
+		}
+		if pc.HotKeys.StaleAfter == 0 {
+			// default to multiplier * TTL
+			pc.HotKeys.StaleAfter = pc.TTL * time.Duration(pc.HotKeys.TTLMultiplier)
 		}
 	}
 
@@ -90,12 +109,22 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 }
 
 func mergeGlobal(global *GlobalConfig) {
+	if global.HotKeys == nil {
+		return
+	}
 	// check hot keys
 	if global.HotKeys.MaxTracked == 0 {
 		global.HotKeys.MaxTracked = DefaultMaxTrackedKeys
 	}
 	if global.HotKeys.CleanupInterval == 0 {
 		global.HotKeys.CleanupInterval = DefaultCleanupInterval
+	}
+	if global.HotKeys.StaleAfter == 0 {
+		// default to multiplier * TTL
+		global.HotKeys.StaleAfter = DefaultStaleAfter
+	}
+	if global.HotKeys.MinExtendInterval == 0 {
+		global.HotKeys.MinExtendInterval = DefaultMinExtendInterval
 	}
 }
 

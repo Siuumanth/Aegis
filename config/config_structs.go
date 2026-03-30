@@ -4,11 +4,19 @@ import "time"
 
 // top level config
 type Config struct {
-	Server   ServerConfig  `yaml:"server"`
-	Redis    RedisConfig   `yaml:"redis"`
-	Defaults DefaultConfig `yaml:"defaults"`
-	HotKeys  HotKeysConfig `yaml:"hot_keys"`
-	Policies []Policy      `yaml:"policies"`
+	Server   *ServerConfig  `yaml:"server"`
+	Redis    *RedisConfig   `yaml:"redis"`
+	Defaults *DefaultConfig `yaml:"defaults"`
+	HotKeys  *HotKeysConfig `yaml:"hot_keys"`
+	Policies []Policy       `yaml:"policies"`
+	Aegis    *Aegis         `yaml:"aegis"`
+}
+
+type Aegis struct {
+	Tags         bool `yaml:"tags"`
+	HotKeys      bool `yaml:"hot_keys"`
+	Singleflight bool `yaml:"singleflight"`
+	Metrics      bool `yaml:"metrics"`
 }
 
 type ServerConfig struct {
@@ -32,10 +40,9 @@ type RedisConfig struct {
 // global defaults applied to all matched keys unless overridden
 
 type DefaultConfig struct {
-	TTL          time.Duration `yaml:"ttl"`
-	MinTTL       time.Duration `yaml:"min_ttl"`
-	MaxTTL       time.Duration `yaml:"max_ttl"`
-	Singleflight bool          `yaml:"singleflight"`
+	TTL    time.Duration `yaml:"ttl"`
+	MinTTL time.Duration `yaml:"min_ttl"`
+	MaxTTL time.Duration `yaml:"max_ttl"`
 }
 
 // system-wide hot key settings, per-pattern config lives in Policy
@@ -64,7 +71,7 @@ type PolicyConfig struct {
 	MaxTTL       time.Duration `yaml:"max_ttl"`
 	Singleflight bool          `yaml:"singleflight"`
 	Tags         []string      `yaml:"tags"`
-	HotKeys      HotKeyPolicy  `yaml:"hot_key"`
+	HotKeys      *HotKeyPolicy `yaml:"hot_key"`
 }
 
 type HotKeyPolicy struct {
@@ -72,5 +79,6 @@ type HotKeyPolicy struct {
 	Window            time.Duration `yaml:"window"`
 	Threshold         int64         `yaml:"threshold"`
 	TTLMultiplier     float64       `yaml:"ttl_multiplier"`
-	minExtendInterval time.Duration `yaml:"min_extend_interval"`
+	StaleAfter        time.Duration `yaml:"stale_after"`
+	MinExtendInterval time.Duration `yaml:"min_extend_interval"`
 }

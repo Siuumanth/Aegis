@@ -5,7 +5,7 @@ import "time"
 // ===== TTL Defaults =====
 const (
 	DefaultTTL    = 60 * time.Second
-	DefaultMinTTL = 5 * time.Second
+	DefaultMinTTL = 0 * time.Second
 	DefaultMaxTTL = 10 * time.Minute
 )
 
@@ -24,8 +24,10 @@ const (
 
 // ===== System Hot Key Limits =====
 const (
-	DefaultMaxTrackedKeys  = 10000
-	DefaultCleanupInterval = 10 * time.Second
+	DefaultMaxTrackedKeys    = 10000
+	DefaultCleanupInterval   = 10 * time.Second
+	DefaultStaleAfter        = 60 * time.Second
+	DefaultMinExtendInterval = 5 * time.Second
 )
 
 // ===== Redis Client Defaults =====

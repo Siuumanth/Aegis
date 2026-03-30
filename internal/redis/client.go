@@ -37,6 +37,9 @@ type Backend interface {
 	GetSetMembers(ctx context.Context, set string) ([]string, error)
 	DeleteKeyTags(ctx context.Context, key string, revKey string, tags []string) error
 	InvalidateTag(ctx context.Context, tagKey string, tag string) (int64, error)
+
+	// Pipe
+	StartPipeline(ctx context.Context) goredis.Pipeliner
 }
 
 type Client struct {
@@ -116,4 +119,8 @@ func (c *Client) DeleteKeyTags(ctx context.Context, key string, revKey string, t
 	pipe.Del(ctx, key)
 	_, err := pipe.Exec(ctx)
 	return err
+}
+
+func (c *Client) StartPipeline(ctx context.Context) goredis.Pipeliner {
+	return c.rdb.Pipeline()
 }

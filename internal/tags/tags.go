@@ -102,15 +102,26 @@ func (t *TagService) Delete(key string) {
 }
 
 func (t *TagService) register(ctx context.Context, ev TagEvent) {
+	// 1. Create the pipeline
+	pipe := t.redis.StartPipeline(ctx)
+
 	for _, tag := range ev.tags {
-		// forward index: tag → key
-		if err := t.redis.AddKeyToSet(ctx, tagKey(tag), ev.key); err != nil {
-			continue
-		}
-		// reverse index: key → tag
-		if err := t.redis.AddKeyToSet(ctx, reverseKey(ev.key), tag); err != nil {
-			continue
-		}
+		tKey := tagKey(tag)
+		rKey := reverseKey(ev.key)
+
+		// 2. Queue the commands (No network call yet)
+		// Forward index: tag -> key
+		pipe.SAdd(ctx, tKey, ev.key)
+		// Reverse index: key -> tag
+		pipe.SAdd(ctx, rKey, tag)
+	}
+
+	// 3. Execute all at once (One network round-trip)
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		// Log it, but don't crash. Since it's async,
+		// the client is already gone anyway.
+		fmt.Printf("[TagService] Pipeline failed for key %s: %v\n", ev.key, err)
 	}
 }
 
