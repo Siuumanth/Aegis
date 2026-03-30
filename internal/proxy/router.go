@@ -5,8 +5,8 @@ import (
 	"Aegis/internal/handler"
 	"Aegis/internal/policy"
 	"Aegis/internal/resp"
+	"Aegis/internal/shared"
 	"context"
-	"fmt"
 	"net"
 	"strings"
 )
@@ -41,8 +41,8 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	}
 	// request is all  the downstream processes need to know to match
 	// 2. routing decision based on cmd
-
-	switch strings.ToUpper(cmd.Name) {
+	CMD := strings.ToUpper(cmd.Name)
+	switch CMD {
 	case "GET":
 		return r.handler.Get(req)
 	case "SET":
@@ -55,14 +55,24 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		return nil
 	case "DEL":
 		return r.handler.Del(req)
+
 	default:
-		fmt.Println("Unknown command:", cmd.Name)
-		// case "DEL":
-		// 	return r.handler.Del(req)
-		// case "AEGIS.INVALIDATE":
-		// 	return r.handler.Invalidate(req)
-		// default:
-		// 	return r.handler.Passthrough(req)
+		if strings.HasPrefix(CMD, "AEGIS.") {
+			return r.RouteCustom(CMD, req)
+		}
+		result, err := r.handler.redis.PassThrough(ctx, cmd)
+		if err != nil {
+			return resp.WriteError(conn, shared.ErrBackend)
+		}
+		return resp.WriteAny(conn, result)
 	}
-	return nil
+}
+
+func (r *Router) RouteCustom(cmd string, req *handler.Request) error {
+	switch cmd {
+	case "AEGIS.INVALIDATE":
+		return r.handler.Invalidate(req)
+	default:
+		return resp.WriteError(req.Conn, shared.ErrInvalidCommand)
+	}
 }

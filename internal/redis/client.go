@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"Aegis/internal/resp"
 	"context"
 	"time"
 
@@ -26,6 +27,8 @@ type Backend interface {
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value string, ttl time.Duration) error
 	Del(ctx context.Context, keys ...string) error
+	PassThrough(ctx context.Context, raw []byte) ([]byte, error)
+
 	// increase TTL
 	Expire(ctx context.Context, key string, ttl time.Duration) error
 	// tag operations
@@ -47,6 +50,20 @@ func NewClient(addr string) *Client {
 			Protocol: 2,
 		}),
 	}
+}
+
+// pass raw bytes to redis
+// raw bytes not possible so rebuild cmd and send
+func (c *Client) PassThrough(ctx context.Context, cmd *resp.Command) (any, error) {
+	args := make([]any, 0, len(cmd.Args)+2)
+	args = append(args, cmd.Name)
+	if cmd.Key != "" {
+		args = append(args, cmd.Key)
+	}
+	for _, arg := range cmd.Args {
+		args = append(args, arg)
+	}
+	return c.rdb.Do(ctx, args...).Result()
 }
 
 // InvalidateTag atomically deletes all keys under a tag via Lua script

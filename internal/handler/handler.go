@@ -14,9 +14,11 @@ type Handler struct {
 	sf      *sf.Group
 }
 
-func NewHandler(cli redis.Backend) *Handler {
+func NewHandler(cli redis.Backend, hk *hotkeys.HotKeyService, t *tags.TagService) *Handler {
 	return &Handler{
-		redis: cli,
-		sf:    &sf.Group{},
+		redis:   cli,
+		hotkeys: hk,
+		tags:    t,
+		sf:      &sf.Group{},
 	}
 }

@@ -34,3 +34,24 @@ func WriteInteger(conn net.Conn, val int64) error {
 	_, err := fmt.Fprintf(conn, ":%d\r\n", val)
 	return err
 }
+
+// write any type
+func WriteAny(conn net.Conn, val any) error {
+	switch v := val.(type) {
+	case string:
+		return WriteString(conn, v)
+	case int64:
+		return WriteInteger(conn, v)
+	case nil:
+		return WriteNull(conn)
+	case []any:
+		// array response
+		fmt.Fprintf(conn, "*%d\r\n", len(v))
+		for _, item := range v {
+			WriteAny(conn, item)
+		}
+		return nil
+	default:
+		return WriteString(conn, fmt.Sprintf("%v", v))
+	}
+}
