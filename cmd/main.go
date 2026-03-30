@@ -3,10 +3,12 @@ package main
 import (
 	"Aegis/config"
 	"Aegis/internal/handler"
+	"Aegis/internal/hotkeys"
 	"Aegis/internal/policy"
 	"Aegis/internal/proxy"
 	"Aegis/internal/redis"
 	"Aegis/internal/resp"
+	"Aegis/internal/tags"
 	"fmt"
 	"net"
 )
@@ -37,7 +39,10 @@ func main() {
 
 	// 2. the handler needs the client to access redis
 	// 3. the router needs the policy engine and handler
-	h := handler.NewHandler(redisClient) // TODO: add tags and hotkeys
+	hk := hotkeys.NewHotKeyService(cfg.GlobalConfig, redisClient, config.DefaultHotKeyBufSize)
+	tag := tags.NewTagService(redisClient, config.DefaultTagBufSize)
+
+	h := handler.NewHandler(redisClient, hk, tag) // sf initialized internally
 	p := policy.NewEngine(cfg)
 
 	// 4. create the router

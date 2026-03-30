@@ -53,19 +53,19 @@ type HotKeyService struct {
 	maxKeys           int
 	cleanupInterval   time.Duration
 	staleAfter        time.Duration
-	redis             redis.Backend
+	redis             redis.Backend // innterface so no ref
 	minExtendInterval time.Duration
 }
 
-func NewHotKeyService(maxKeys int, bufSize int, redisClient redis.Backend, minExtendInterval, cleanupInterval, staleAfter time.Duration) *HotKeyService {
+func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bufSize int) *HotKeyService {
 	return &HotKeyService{
 		m:                 make(map[string]*HotKeyEntry),
 		hkChan:            make(chan hkEvent, bufSize),
-		maxKeys:           maxKeys,
+		maxKeys:           global.HotKeys.MaxTracked,
 		redis:             redisClient,
-		minExtendInterval: minExtendInterval,
-		cleanupInterval:   cleanupInterval,
-		staleAfter:        staleAfter,
+		minExtendInterval: global.HotKeys.MinExtendInterval,
+		cleanupInterval:   global.HotKeys.CleanupInterval,
+		staleAfter:        global.HotKeys.StaleAfter,
 	}
 }
 

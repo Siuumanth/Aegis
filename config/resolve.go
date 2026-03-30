@@ -14,7 +14,7 @@ type GlobalConfig struct {
 
 // the final config which will be passed to all functions
 type RuntimeConfig struct {
-	GlobalConfig    GlobalConfig
+	GlobalConfig    *GlobalConfig
 	PatternPolicies map[string]PolicyConfig
 	TagPolicies     map[string]PolicyConfig
 }
@@ -22,13 +22,13 @@ type RuntimeConfig struct {
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 	rt := &RuntimeConfig{
-		GlobalConfig:    GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
+		GlobalConfig:    &GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
 		PatternPolicies: make(map[string]PolicyConfig),
 		TagPolicies:     make(map[string]PolicyConfig),
 	}
 
 	// set default of global
-	mergeGlobal(&rt.GlobalConfig)
+	mergeGlobal(rt.GlobalConfig)
 
 	for _, p := range cfg.Policies {
 		mergeDefaults(cfg, &p.Config)

@@ -27,7 +27,7 @@ type Backend interface {
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value string, ttl time.Duration) error
 	Del(ctx context.Context, keys ...string) error
-	PassThrough(ctx context.Context, cmd *resp.Command) ([]byte, error)
+	PassThrough(ctx context.Context, cmd *resp.Command) (any, error)
 
 	// increase TTL
 	Expire(ctx context.Context, key string, ttl time.Duration) error

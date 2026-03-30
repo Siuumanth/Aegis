@@ -40,8 +40,10 @@ type DefaultConfig struct {
 
 // system-wide hot key settings, per-pattern config lives in Policy
 type HotKeysConfig struct {
-	MaxTracked      int           `yaml:"max_tracked"`
-	CleanupInterval time.Duration `yaml:"cleanup_interval"`
+	MaxTracked        int           `yaml:"max_tracked"`
+	CleanupInterval   time.Duration `yaml:"cleanup_interval"`
+	StaleAfter        time.Duration `yaml:"stale_after"`
+	MinExtendInterval time.Duration `yaml:"min_extend_interval"`
 }
 
 // one policy block in the policies list

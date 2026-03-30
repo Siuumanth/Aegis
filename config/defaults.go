@@ -47,3 +47,11 @@ const (
 	DefaultServerReadTO   = 30 * time.Second
 	DefaultServerWriteTO  = 30 * time.Second
 )
+
+// WP AND TAG PROCESS defaults
+const (
+	DefaultTagWorkers    = 4
+	DefaultTagBufSize    = 1000
+	DefaultHotKeyWorkers = 4
+	DefaultHotKeyBufSize = 1000
+)
