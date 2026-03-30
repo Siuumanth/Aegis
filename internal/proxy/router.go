@@ -60,12 +60,12 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		if strings.HasPrefix(CMD, "AEGIS.") {
 			return r.RouteCustom(CMD, req)
 		}
-		result, err := r.handler.redis.PassThrough(ctx, cmd)
+		err := r.handler.DefaultHandler(req)
 		if err != nil {
 			return resp.WriteError(conn, shared.ErrBackend)
 		}
-		return resp.WriteAny(conn, result)
 	}
+	return nil
 }
 
 func (r *Router) RouteCustom(cmd string, req *handler.Request) error {
