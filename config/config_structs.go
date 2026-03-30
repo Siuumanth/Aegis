@@ -66,8 +66,9 @@ type PolicyConfig struct {
 }
 
 type HotKeyPolicy struct {
-	Enabled       bool          `yaml:"enabled"`
-	Window        time.Duration `yaml:"window"`
-	Threshold     int64         `yaml:"threshold"`
-	TTLMultiplier float64       `yaml:"ttl_multiplier"`
+	Enabled           bool          `yaml:"enabled"`
+	Window            time.Duration `yaml:"window"`
+	Threshold         int64         `yaml:"threshold"`
+	TTLMultiplier     float64       `yaml:"ttl_multiplier"`
+	minExtendInterval time.Duration `yaml:"min_extend_interval"`
 }

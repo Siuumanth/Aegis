@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "notes/flows.md",
+                "file": "notes/hotkeys.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "flows"
+              "title": "hotkeys"
             }
           }
         ]
@@ -183,12 +183,13 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
+    "notes/flows.md",
+    "notes/hotkeys.md",
     "internal/hotkeys/hotkeys.go",
     "internal/hotkeys/helpers.go",
     "notes/0-tcpNresp.md",
     "notes/bufio.md",
     "notes/plan.md",
-    "notes/flows.md",
     "internal/proxy/conn.go",
     "internal/proxy/forward.go",
     "internal/proxy/passthroue",
@@ -197,7 +198,6 @@
     "internal/redis",
     "internal/types/request.go",
     "internal/types",
-    "internal/types.go",
     "notes/tags.md.md",
     "README.md",
     "plan.md"

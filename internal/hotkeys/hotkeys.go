@@ -37,7 +37,7 @@ policy * multiplier + last updated is more than the current time , then ill know
 
 type HotKeyEntry struct {
 	Count         int64
-	LastIncreased time.Time // last time the hot key was multiplied
+	LastIncreased time.Time // last time the hot key ttl was extended
 }
 
 type hkEvent struct {
@@ -45,29 +45,31 @@ type hkEvent struct {
 	policy *config.PolicyConfig
 }
 
+// hot key service state
 type HotKeyService struct {
 	mu                sync.RWMutex
 	m                 map[string]*HotKeyEntry // map to store key:[count, last increased]
 	hkChan            chan hkEvent            // channel to get events
 	maxKeys           int
-	cleanup           time.Duration
+	cleanupInterval   time.Duration
+	staleAfter        time.Duration
 	redis             redis.Backend
 	minExtendInterval time.Duration
 }
 
-// TODO: add tis to yaml
-
-func NewHotKeyService(maxKeys int, bufSize int, redisClient redis.Backend) *HotKeyService {
+func NewHotKeyService(maxKeys int, bufSize int, redisClient redis.Backend, minExtendInterval, cleanupInterval, staleAfter time.Duration) *HotKeyService {
 	return &HotKeyService{
-		m:       make(map[string]*HotKeyEntry),
-		hkChan:  make(chan hkEvent, bufSize),
-		maxKeys: maxKeys,
-		redis:   redisClient,
+		m:                 make(map[string]*HotKeyEntry),
+		hkChan:            make(chan hkEvent, bufSize),
+		maxKeys:           maxKeys,
+		redis:             redisClient,
+		minExtendInterval: minExtendInterval,
+		cleanupInterval:   cleanupInterval,
+		staleAfter:        staleAfter,
 	}
 }
 
-// init functoin , spawn a smallworker pool
-// Start spawns N workers draining the event channel
+// Start spawns N workers draining the event channel + cleanup goroutine
 func (h *HotKeyService) Start(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
 		go func() {
@@ -81,36 +83,52 @@ func (h *HotKeyService) Start(ctx context.Context, workers int) {
 			}
 		}()
 	}
+
+	// cleanup goroutine resets counts and evicts stale keys
+	go func() {
+		ticker := time.NewTicker(h.cleanupInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				h.cleanup()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 }
 
 // Track enqueues a key event, non-blocking
 func (h *HotKeyService) Track(key string, policy *config.PolicyConfig) {
 	select {
 	case h.hkChan <- hkEvent{key: key, policy: policy}:
-	default: // channel full, drop silently
+	default: // channel full, drop silently for v1
 	}
 }
 
+// increment for each hot key
 func (h *HotKeyService) increment(ctx context.Context, key string, policy *config.PolicyConfig) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
-	// safe incrememnnt
 
 	entry, ok := h.m[key]
 	if !ok {
 		if len(h.m) >= h.maxKeys {
+			// max keys tracked, cant track any more
+			h.mu.Unlock()
 			return
 		}
 		h.m[key] = &HotKeyEntry{Count: 1}
+		h.mu.Unlock()
 		return
 	}
 
 	entry.Count++
+	// check if hot key is hot
+	isHot := entry.Count >= policy.HotKeys.Threshold
+	h.mu.Unlock() // release before spawning goroutine
 
-	// check if key hot
-	if entry.Count >= policy.HotKeys.Threshold {
+	if isHot {
 		go h.Extend(ctx, key, policy.TTL, policy.HotKeys.TTLMultiplier)
 	}
 }
-
-// TODO: add cleanup logic n stuff

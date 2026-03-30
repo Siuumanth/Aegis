@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// TODO: update defaults and resolving
+// TODO: Default stale after is multiplier * TTL
 // for default and hot keys
 type GlobalConfig struct {
 	HotKeys  HotKeysConfig

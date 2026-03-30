@@ -23,7 +23,8 @@ defaults:
 # these thresholds only global 
 hot_keys:
   max_tracked: 10000        # system-wide memory cap
-  cleanup_interval: 10s     # how often stale hot key records are evicted
+  cleanup_interval: 10s     # how often stale hot key records are checked
+  stale_after: 1m
 
 policies:
   - name: "user-profiles"
