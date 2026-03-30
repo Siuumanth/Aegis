@@ -26,6 +26,10 @@ hot_keys:
   cleanup_interval: 10s     # how often stale hot key records are checked
   stale_after: 1m
 
+aegis:
+  tags: true
+  hot_keys: true
+
 policies:
   - name: "user-profiles"
     match:

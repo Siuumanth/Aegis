@@ -13,12 +13,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "notes/hotkeys.md",
+                "file": "notes/tags.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "hotkeys"
+              "title": "tags.md"
+            }
+          },
+          {
+            "id": "48a0a8af8d6265e3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "notes/1-tcp.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "1-tcp"
             }
           }
         ]
@@ -183,21 +197,23 @@
   },
   "active": "f4c8a791979aafda",
   "lastOpenFiles": [
-    "notes/flows.md",
+    "notes/aegis.md",
+    "notes/0-tcpNresp.md",
+    "notes/1-tcp.md",
     "notes/hotkeys.md",
+    "internal/resp/parser.go",
+    "internal/resp/resp2.go",
+    "internal/resp/command.go",
+    "internal/resp",
+    "internal/redis/resp/resp2.go",
+    "internal/redis/resp/parser.go",
+    "internal/redis/resp/command.go",
+    "internal/redis/resp",
+    "notes/flows.md",
     "internal/hotkeys/hotkeys.go",
     "internal/hotkeys/helpers.go",
-    "notes/0-tcpNresp.md",
     "notes/bufio.md",
     "notes/plan.md",
-    "internal/proxy/conn.go",
-    "internal/proxy/forward.go",
-    "internal/proxy/passthroue",
-    "internal/redis/client.go",
-    "internal/redis/redis.go",
-    "internal/redis",
-    "internal/types/request.go",
-    "internal/types",
     "notes/tags.md.md",
     "README.md",
     "plan.md"
