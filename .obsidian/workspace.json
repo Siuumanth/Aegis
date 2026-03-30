@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "notes/tags.md",
+                "file": "notes/custom.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "tags"
+              "title": "custom"
             }
           },
           {
@@ -212,6 +212,8 @@
   },
   "active": "467437c7c23b144e",
   "lastOpenFiles": [
+    "internal/tags/tag_modes.go",
+    "notes/tags.md",
     "internal/resp/writer.go",
     "internal/shared/errors.go",
     "internal/shared",
@@ -219,7 +221,6 @@
     "notes/custom.md",
     "notes/1-tcp.md",
     "notes/aegis.md",
-    "notes/tags.md",
     "notes/0-tcpNresp.md",
     "notes/hotkeys.md",
     "internal/resp/parser.go",
@@ -228,7 +229,6 @@
     "internal/resp",
     "internal/redis/resp/resp2.go",
     "internal/redis/resp/parser.go",
-    "internal/redis/resp/command.go",
     "notes/flows.md",
     "notes/bufio.md",
     "notes/plan.md",

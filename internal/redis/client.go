@@ -32,7 +32,7 @@ type Backend interface {
 	AddKeyToSet(ctx context.Context, set string, member string) error
 	RemoveKeyFromSet(ctx context.Context, set string, member string) error
 	GetSetMembers(ctx context.Context, set string) ([]string, error)
-	DeleteKeyTags(ctx context.Context, key string, tags []string) error
+	DeleteKeyTags(ctx context.Context, key string, revKey string, tags []string) error
 	InvalidateTag(ctx context.Context, tagKey string, tag string) (int64, error)
 }
 
@@ -89,7 +89,7 @@ func (c *Client) GetSetMembers(ctx context.Context, set string) ([]string, error
 }
 
 // a pipeline to deleete all tags for a keyy using a single script
-func (c *Client) DeleteKeyTags(ctx context.Context, key string, tags []string) error {
+func (c *Client) DeleteKeyTags(ctx context.Context, key string, revKey string, tags []string) error {
 	pipe := c.rdb.Pipeline()
 	// Creates a Redis pipeline
 	// to batch multiple commands into ONE network round trip

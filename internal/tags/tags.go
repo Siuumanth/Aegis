@@ -67,12 +67,26 @@ func (t *TagService) Start(ctx context.Context, workers int) {
 }
 
 // Register enqueues a tag registration event from SET or ATAG, non-blocking
-func (t *TagService) Register(key string, policyTags []string, atags []string) {
-	// just register all tags
-	all := append(policyTags, atags...)
+// Register parses raw args for AEGIS.TAG modifiers and enqueues tag event
+func (t *TagService) Register(key string, policyTags []string, args []string) {
+	mode, extraTags := parseTagArgs(args)
+
+	if mode == TagModeSkip {
+		return
+	}
+
+	var all []string
+	switch mode {
+	case TagModeOverride:
+		all = extraTags // ignore policy tags if Aegis.TagOnly
+	case TagModeNormal:
+		all = append(policyTags, extraTags...)
+	}
+
 	if len(all) == 0 {
 		return
 	}
+
 	select {
 	case t.registerChan <- TagEvent{key: key, tags: all}:
 	default: // drop silently v1
@@ -113,7 +127,7 @@ func (t *TagService) delete(ctx context.Context, key string) {
 	}
 
 	// pipeline: SREM from all forward indexes + DEL reverse index
-	t.redis.DeleteKeyTags(ctx, reverseKey(key), tagKeys)
+	t.redis.DeleteKeyTags(ctx, key, reverseKey(key), tagKeys)
 }
 
 // delete all keys under a tag via Lua script
