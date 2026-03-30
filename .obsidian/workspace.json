@@ -212,6 +212,7 @@
   },
   "active": "467437c7c23b144e",
   "lastOpenFiles": [
+    "internal/handler/delete.go",
     "internal/tags/tag_modes.go",
     "notes/tags.md",
     "internal/resp/writer.go",
@@ -228,7 +229,6 @@
     "internal/resp/command.go",
     "internal/resp",
     "internal/redis/resp/resp2.go",
-    "internal/redis/resp/parser.go",
     "notes/flows.md",
     "notes/bufio.md",
     "notes/plan.md",

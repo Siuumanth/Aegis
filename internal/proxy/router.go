@@ -53,6 +53,8 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	case "CLIENT":
 		conn.Write([]byte("+OK\r\n"))
 		return nil
+	case "DEL":
+		return r.handler.Del(req)
 	default:
 		fmt.Println("Unknown command:", cmd.Name)
 		// case "DEL":
