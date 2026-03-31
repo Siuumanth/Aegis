@@ -1,62 +1,116 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
+// DEV SETTINGS
+const (
+	TEST_COUNT = 100 // Number of requests for benchmark
+	ADDR       = "localhost:6379"
+)
+
 func main() {
 	ctx := context.Background()
 
-	// Connect to AEGIS on 6379
+	// mode := "load"
+	mode := "itl"
+	// it for interactive
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         "localhost:6379",
+		Addr:         ADDR,
 		Protocol:     2,
-		WriteTimeout: 100 * time.Millisecond,
-		ReadTimeout:  100 * time.Millisecond,
+		WriteTimeout: 200 * time.Millisecond,
+		ReadTimeout:  200 * time.Millisecond,
 	})
 
-	fmt.Println("Starting continuous cache Test on Aegis...")
+	if mode == "it" {
+		runREPL(ctx, rdb)
+	} else if mode == "load" {
+		runBenchmark(ctx, rdb)
+	} else {
+		runBenchmark(ctx, rdb)
+
+		runREPL(ctx, rdb)
+	}
+}
+
+func runBenchmark(ctx context.Context, rdb *redis.Client) {
+	fmt.Printf("🚀 Running Benchmark: %d\n", TEST_COUNT)
+
 	var total time.Duration
-	count := 100
-	//	exp := 20
+	success := 0
 
-	for i := 0; i < count; i++ {
-		start := time.Now()
-
+	for i := 0; i < TEST_COUNT; i++ {
 		key := fmt.Sprintf("user:%d", rand.Intn(100))
 		val := fmt.Sprintf("data-%d", i)
 
-		// SET with expiry (EX 10 seconds)
-		//err := rdb.Do(ctx, "SET", key, val, "EX", exp).Err()
-		err := rdb.Do(ctx, "SET", key, val).Err()
-		if err != nil {
+		start := time.Now()
+
+		// SET + GET sequence
+		if err := rdb.Set(ctx, key, val, 10*time.Second).Err(); err != nil {
 			fmt.Printf("SET Error: %v\n", err)
 			continue
 		}
 
-		// GET
-		_, err = rdb.Do(ctx, "GET", key).Result()
-		if err != nil {
+		if _, err := rdb.Get(ctx, key).Result(); err != nil {
 			fmt.Printf("GET Error: %v\n", err)
-		}
-
-		end := time.Since(start)
-		if i == 0 {
 			continue
 		}
-		//log.Println(end)
-		// if firs time then skip
 
-		total += end
-
-		//time.Sleep(500 * time.Millisecond)
+		// Skip first request for accurate average (warm-up)
+		if i > 0 {
+			total += time.Since(start)
+			success++
+		}
 	}
 
-	log.Println("AVERAGE TIME IS ", total/time.Duration(count))
+	if success > 0 {
+		log.Printf("AVERAGE LATENCY: %v", total/time.Duration(success))
+	}
+}
+
+func runREPL(ctx context.Context, rdb *redis.Client) {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Printf("⌨️  Aegis REPL (%s) - Type 'exit' to quit\n", ADDR)
+
+	for {
+		fmt.Print("aegis> ")
+		if !scanner.Scan() {
+			break
+		}
+
+		input := scanner.Text()
+		if strings.ToLower(input) == "exit" {
+			break
+		}
+
+		parts := strings.Fields(input)
+		if len(parts) == 0 {
+			continue
+		}
+
+		args := make([]interface{}, len(parts))
+		for i, v := range parts {
+			args[i] = v
+		}
+
+		start := time.Now()
+		res, err := rdb.Do(ctx, args...).Result()
+
+		if err != nil {
+			fmt.Printf("(error) %v\n", err)
+		} else {
+			fmt.Printf("%v (%v)\n", res, time.Since(start))
+		}
+	}
 }

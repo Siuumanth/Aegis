@@ -8,6 +8,9 @@ import (
 // resolveTTL determines the final TTL for a SET command.
 // prefers client-provided TTL, falls back to policy TTL.
 func ResolveTTL(pc *config.PolicyConfig, clientTTL time.Duration) time.Duration {
+	if pc != nil && pc.TTL == config.DefaultTTL {
+		return clientTTL
+	}
 	// client TTL is the ttl in the sent command
 	ttl := pc.TTL
 

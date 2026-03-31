@@ -102,6 +102,9 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	// but if ttl is not defined, it will be 0 automatically and will be ignored
 	// but lets make a default custom logic
 	// configute ttls
+	if cfg.Defaults == nil {
+		return
+	}
 	pc.TTL = pickDuration(pc.TTL, pickDuration(cfg.Defaults.TTL, DefaultTTL))
 	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, DefaultMinTTL))
 	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, DefaultMaxTTL))

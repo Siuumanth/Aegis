@@ -8,6 +8,6 @@ import (
 
 var (
 	ErrBackend        = errors.New("backend error")
-	ErrInvalidCommand = errors.New("invalid command")
+	ErrInvalidCommand = errors.New("invalid commandd")
 	ErrGoRedisNil     = goredis.Nil
 )

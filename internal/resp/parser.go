@@ -54,7 +54,6 @@ func PrintCommand(cmd *Command, w io.Writer) error {
 		args = append(args, cmd.Key)
 	}
 	args = append(args, cmd.Args...)
-	// TODO: fix this
 	if _, err := fmt.Fprintf(w, "the input command is %s\r\n", strings.Join(args, " ")); err != nil {
 		return err
 	}

@@ -11,14 +11,35 @@ import (
 // lua script for invalidating a tag
 // delete forward index and reverse index
 var invalidateScript = goredis.NewScript(`
-local keys = redis.call('SMEMBERS', KEYS[1])  -- get all keys under tag
+local tag_to_invalidate = KEYS[1] -- e.g., 'tags:profile'
+local tag_name = KEYS[2]         -- e.g., 'profile'
+
+-- 1. Get all keys currently associated with this tag
+local keys = redis.call('SMEMBERS', tag_to_invalidate)
+
 if #keys > 0 then
     for _, key in ipairs(keys) do
-        redis.call('SREM', 'key-tags:' .. key, KEYS[2])  -- remove tag from reverse index
+        local rev_idx = 'key-tags:' .. key
+        
+        -- 2. Get ALL tags this key belongs to (e.g., ['users', 'profile'])
+        local other_tags = redis.call('SMEMBERS', rev_idx)
+        
+        for _, t in ipairs(other_tags) do
+            -- 3. Cleanup the Forward Index of EVERY OTHER tag
+            -- We must remove 'user:1' from 'tags:users' too!
+            redis.call('SREM', 'tags:' .. t, key)
+        end
+        
+        -- 4. Delete the Reverse Index (metadata)
+        redis.call('DEL', rev_idx)
     end
-    redis.call('DEL', unpack(keys))  -- delete the actual keys
+    
+    -- 5. Delete all actual data keys in bulk
+    redis.call('DEL', unpack(keys))
 end
-redis.call('DEL', KEYS[1])  -- delete forward index
+
+-- 6. Finally, delete the specific Tag Set we are invalidating
+redis.call('DEL', tag_to_invalidate)
 return #keys
 `)
 
@@ -56,7 +77,7 @@ func NewClient(addr string) *Client {
 }
 
 // pass raw bytes to redis
-// raw bytes not possible so rebuild cmd and send
+// raw bytes not possible thru redis client so rebuild cmd and send
 func (c *Client) PassThrough(ctx context.Context, cmd *resp.Command) (any, error) {
 	args := make([]any, 0, len(cmd.Args)+2)
 	args = append(args, cmd.Name)
@@ -117,6 +138,7 @@ func (c *Client) DeleteKeyTags(ctx context.Context, key string, revKey string, t
 		pipe.SRem(ctx, tag, key)
 	}
 	pipe.Del(ctx, key)
+	pipe.Del(ctx, revKey)
 	_, err := pipe.Exec(ctx)
 	return err
 }

@@ -3,10 +3,11 @@ package config
 import "time"
 
 // ===== TTL Defaults =====
+// unbounded
 const (
-	DefaultTTL    = 60 * time.Second
+	DefaultTTL    = 0 * time.Second
 	DefaultMinTTL = 0 * time.Second
-	DefaultMaxTTL = 10 * time.Minute
+	DefaultMaxTTL = 0 * time.Minute
 )
 
 // ===== Singleflight =====

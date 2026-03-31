@@ -15,9 +15,9 @@ redis:
   max_retries: 2
 
 # pattern specific policies can be overridden from defaults
-defaults:
-  ttl: 10
-  min_ttl: 5s
+# defaults:
+#   ttl: 10s
+#   min_ttl: 5s
 
 # GLobal kill switch
 aegis:
@@ -38,7 +38,7 @@ policies:
     match:
       pattern: "user:*"
     config:
-      ttl: 45s
+      ttl: 0s
       min_ttl: 5s
       max_ttl: 10m
       singleflight: true

@@ -31,10 +31,10 @@ func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.P
 
 	// If entry is gone or we are within the MinExtendInterval cooldown, stop here
 	if !ok || (!entry.lastIncreased.IsZero() && time.Since(entry.lastIncreased) < policy.HotKeys.MinExtendInterval) {
-		h.mu.RUnlock()
+		h.mu.Unlock()
 		return nil
 	}
-	h.mu.RUnlock()
+	h.mu.Unlock()
 
 	// use proper policy specific fields
 	// 2. Prepare the command, no CS
@@ -56,7 +56,7 @@ func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.P
 	return nil
 }
 
-func (h *HotKeyService) Delete(ctx context.Context, key string) {
+func (h *HotKeyService) Delete(key string) {
 	h.mu.Lock()
 	delete(h.m, key)
 	defer h.mu.Unlock()

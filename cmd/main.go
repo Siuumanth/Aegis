@@ -23,16 +23,15 @@ import (
 6. build router
 7. start TCP listener → on each Accept() → NewConn(conn, router) → go conn.Handle()
 */
-// TODO: init tags and hot keys WP, make HK policy specific , add nil checks
 func main() {
 	// yaml parser
-	yaml, err := config.Load()
+	configStruct, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
+	config.PrintConfig(configStruct)
 
-	cfg := config.BuildRuntimeConfig(yaml)
-	fmt.Println(cfg)
+	cfg := config.BuildRuntimeConfig(configStruct)
 
 	// Create a gloabl context to to pass around, specially for async workers
 	globalCtx, cancel := context.WithCancel(context.Background())

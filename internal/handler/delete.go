@@ -20,7 +20,7 @@ func (h *Handler) Del(ctx context.Context, req *Request) error {
 
 	// 3.  hotkey cleanup
 	if h.hotkeys != nil {
-		h.hotkeys.Delete(ctx, req.Cmd.Key)
+		h.hotkeys.Delete(req.Cmd.Key)
 	}
 
 	// 4. RESP OK
