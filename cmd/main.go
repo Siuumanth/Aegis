@@ -9,6 +9,7 @@ import (
 	"Aegis/internal/redis"
 	"Aegis/internal/resp"
 	"Aegis/internal/tags"
+	"context"
 	"fmt"
 	"net"
 )
@@ -33,6 +34,10 @@ func main() {
 	cfg := config.BuildRuntimeConfig(yaml)
 	fmt.Println(cfg)
 
+	// Create a gloabl context to to pass around, specially for async workers
+	globalCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// build dependencies
 	// 1. new redis backend client
 	redisClient := redis.NewClient("localhost:6380")
@@ -41,7 +46,11 @@ func main() {
 	// 3. the router needs the policy engine and handler
 	hk := hotkeys.NewHotKeyService(cfg.GlobalConfig, redisClient, config.DefaultHotKeyBufSize)
 	tag := tags.NewTagService(redisClient, config.DefaultTagBufSize)
+	// init tags and hot keys
+	hk.Init(globalCtx, config.DefaultHotKeyWorkers)
+	tag.Init(globalCtx, config.DefaultTagWorkers)
 
+	// build router components
 	h := handler.NewHandler(redisClient, hk, tag) // sf initialized internally
 	p := policy.NewEngine(cfg)
 
@@ -65,16 +74,16 @@ func main() {
 		if err != nil {
 			continue
 		}
-		go handleConnection(conn, router)
+		go handleConnection(conn, router, globalCtx)
 	}
 }
 
 // client = connection from app
-func handleConnection(conn net.Conn, r *proxy.Router) {
+func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context) {
 
 	parser := resp.NewParser(conn)
 	// get new connection
 	pconn := proxy.NewConn(conn, r, parser)
 
-	pconn.Handle()
+	pconn.Handle(globalCtx)
 }

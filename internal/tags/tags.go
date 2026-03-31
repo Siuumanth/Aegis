@@ -49,7 +49,7 @@ func NewTagService(redisClient redis.Backend, bufSize int) *TagService {
 }
 
 // Start spawns N workers draining both channels
-func (t *TagService) Start(ctx context.Context, workers int) {
+func (t *TagService) Init(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
 		go func() {
 			for {

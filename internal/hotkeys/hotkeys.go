@@ -70,7 +70,7 @@ func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bu
 }
 
 // Start spawns N workers draining the event channel + cleanup goroutine
-func (h *HotKeyService) Start(ctx context.Context, workers int) {
+func (h *HotKeyService) Init(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
 		go func() {
 			for {
