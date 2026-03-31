@@ -45,6 +45,7 @@ func main() {
 }
 
 func runBenchmark(ctx context.Context, rdb *redis.Client) {
+	rdb.FlushAll(ctx)
 	fmt.Printf("🚀 Running Benchmark: %d\n", TEST_COUNT)
 
 	var total time.Duration
@@ -53,11 +54,12 @@ func runBenchmark(ctx context.Context, rdb *redis.Client) {
 	for i := 0; i < TEST_COUNT; i++ {
 		key := fmt.Sprintf("user:%d", rand.Intn(100))
 		val := fmt.Sprintf("data-%d", i)
+		ttl := 100 * time.Second
 
 		start := time.Now()
 
 		// SET + GET sequence
-		if err := rdb.Set(ctx, key, val, 10*time.Second).Err(); err != nil {
+		if err := rdb.Set(ctx, key, val, ttl).Err(); err != nil {
 			fmt.Printf("SET Error: %v\n", err)
 			continue
 		}

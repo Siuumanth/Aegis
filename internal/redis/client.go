@@ -8,38 +8,44 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-// lua script for invalidating a tag
-// delete forward index and reverse index
+// InvalidateTag atomically deletes all keys under a tag and cleans up all associated indexes.
+// KEYS[1] = The Forward Index Key (e.g., "tag:profile")
+// KEYS[2] = The Raw Tag Name (e.g., "profile")
 var invalidateScript = goredis.NewScript(`
-local tag_to_invalidate = KEYS[1] -- e.g., 'tags:profile'
-local tag_name = KEYS[2]         -- e.g., 'profile'
+-- KEYS[1] is "tag:profile"
+-- KEYS[2] is "profile" (the raw tag name)
+local target_tag_set = KEYS[1]
 
--- 1. Get all keys currently associated with this tag
-local keys = redis.call('SMEMBERS', tag_to_invalidate)
+-- 1. Get all user keys like "user:0", "user:1"
+local keys = redis.call('SMEMBERS', target_tag_set)
 
 if #keys > 0 then
     for _, key in ipairs(keys) do
+        -- 2. Reverse Index key name
         local rev_idx = 'key-tags:' .. key
         
-        -- 2. Get ALL tags this key belongs to (e.g., ['users', 'profile'])
-        local other_tags = redis.call('SMEMBERS', rev_idx)
+        -- 3. Get the raw tag names from the screenshot (["users", "profile"])
+        local associated_tags = redis.call('SMEMBERS', rev_idx)
         
-        for _, t in ipairs(other_tags) do
-            -- 3. Cleanup the Forward Index of EVERY OTHER tag
-            -- We must remove 'user:1' from 'tags:users' too!
-            redis.call('SREM', 'tags:' .. t, key)
+        for _, t_name in ipairs(associated_tags) do
+            -- 4. CONSTRUCT THE FORWARD KEY
+            -- Since your screenshot shows "users", we make "tags:users"
+            local forward_idx_key = "tag:" .. t_name
+            
+            -- 5. YANK KEY FROM ALL OTHER SETS
+            -- This is what removes "user:0" from "tag:users"
+            redis.call('SREM', forward_idx_key, key)
         end
         
-        -- 4. Delete the Reverse Index (metadata)
+        -- 6. DELETE METADATA & ACTUAL DATA
         redis.call('DEL', rev_idx)
+        redis.call('DEL', key)
     end
-    
-    -- 5. Delete all actual data keys in bulk
-    redis.call('DEL', unpack(keys))
 end
 
--- 6. Finally, delete the specific Tag Set we are invalidating
-redis.call('DEL', tag_to_invalidate)
+-- 7. DELETE THE PRIMARY TARGET SET
+redis.call('DEL', target_tag_set)
+
 return #keys
 `)
 
