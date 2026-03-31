@@ -35,9 +35,13 @@ policy * multiplier + last updated is more than the current time , then ill know
 
 */
 
+// TODO: make it so that hot keys only depeend on hot keys  policy, not the whole
+// rn in v1, it depends on the ttl in the policy config , in extend, which logic can be improved
+
 type HotKeyEntry struct {
-	Count         int64
-	LastIncreased time.Time // last time the hot key ttl was extended
+	count         int64
+	lastIncreased time.Time            // last time the hot key ttl was extended
+	hkPolicy      *config.HotKeyPolicy // policy specific fields
 }
 
 type hkEvent struct {
@@ -47,25 +51,28 @@ type hkEvent struct {
 
 // hot key service state
 type HotKeyService struct {
-	mu                sync.RWMutex
-	m                 map[string]*HotKeyEntry // map to store key:[count, last increased]
-	hkChan            chan hkEvent            // channel to get events
-	maxKeys           int
-	cleanupInterval   time.Duration
-	staleAfter        time.Duration
-	redis             redis.Backend // innterface so no ref
-	minExtendInterval time.Duration
+	mu              sync.RWMutex
+	m               map[string]*HotKeyEntry // map to store key:[count, last increased]
+	hkChan          chan *hkEvent           // channel to get events
+	maxKeys         int
+	redis           redis.Backend // innterface so no ref
+	cleanupInterval time.Duration
+
+	// policy specific
+	// staleAfter        time.Duration
+	// minExtendInterval time.Duration
 }
 
 func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bufSize int) *HotKeyService {
 	return &HotKeyService{
-		m:                 make(map[string]*HotKeyEntry),
-		hkChan:            make(chan hkEvent, bufSize),
-		maxKeys:           global.HotKeys.MaxTracked,
-		redis:             redisClient,
-		minExtendInterval: global.HotKeys.MinExtendInterval,
-		cleanupInterval:   global.HotKeys.CleanupInterval,
-		staleAfter:        global.HotKeys.StaleAfter,
+		m:               make(map[string]*HotKeyEntry),
+		hkChan:          make(chan *hkEvent, bufSize),
+		maxKeys:         global.HotKeys.MaxTracked,
+		redis:           redisClient,
+		cleanupInterval: global.HotKeys.CleanupInterval,
+
+		// minExtendInterval: global.HotKeys.MinExtendInterval,
+		// staleAfter:        global.HotKeys.StaleAfter,
 	}
 }
 
@@ -103,7 +110,7 @@ func (h *HotKeyService) Init(ctx context.Context, workers int) {
 // Track enqueues a key event, non-blocking
 func (h *HotKeyService) Track(key string, policy *config.PolicyConfig) {
 	select {
-	case h.hkChan <- hkEvent{key: key, policy: policy}:
+	case h.hkChan <- &hkEvent{key: key, policy: policy}:
 	default: // channel full, drop silently for v1
 	}
 }
@@ -119,17 +126,17 @@ func (h *HotKeyService) increment(ctx context.Context, key string, policy *confi
 			h.mu.Unlock()
 			return
 		}
-		h.m[key] = &HotKeyEntry{Count: 1}
+		h.m[key] = &HotKeyEntry{count: 1, hkPolicy: policy.HotKeys}
 		h.mu.Unlock()
 		return
 	}
 
-	entry.Count++
+	entry.count++
 	// check if hot key is hot
-	isHot := entry.Count >= policy.HotKeys.Threshold
+	isHot := entry.count >= policy.HotKeys.Threshold
 	h.mu.Unlock() // release before spawning goroutine
 
 	if isHot {
-		go h.Extend(ctx, key, policy.TTL, policy.HotKeys.TTLMultiplier)
+		h.Extend(ctx, key, policy)
 	}
 }
