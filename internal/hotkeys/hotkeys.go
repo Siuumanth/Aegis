@@ -37,7 +37,7 @@ policy * multiplier + last updated is more than the current time , then ill know
 
 // TODO: make it so that hot keys only depeend on hot keys  policy, not the whole
 // rn in v1, it depends on the ttl in the policy config , in extend, which logic can be improved
-
+// TODO: implement window field
 type HotKeyEntry struct {
 	count         int64
 	lastIncreased time.Time            // last time the hot key ttl was extended
@@ -64,6 +64,10 @@ type HotKeyService struct {
 }
 
 func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bufSize int) *HotKeyService {
+	// if global is disabled then return
+	if global.HotKeys == nil || !global.Aegis.HotKeys {
+		return nil
+	}
 	return &HotKeyService{
 		m:               make(map[string]*HotKeyEntry),
 		hkChan:          make(chan *hkEvent, bufSize),

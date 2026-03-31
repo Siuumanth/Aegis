@@ -36,7 +36,7 @@ func (h *Handler) Set(ctx context.Context, req *Request) error {
 	}
 	args := req.Cmd.Args[1:] // passing only modifiers
 	// register tags async, nil safe
-	if h.tags != nil && req.Policy != nil {
+	if h.tags != nil && req.Policy != nil && req.Policy.Tags != nil {
 		h.tags.Register(req.Cmd.Key, req.Policy.Tags, args)
 	}
 

@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"Aegis/config"
 	"Aegis/internal/redis"
 	"context"
 	"fmt"
@@ -40,7 +41,10 @@ type TagService struct {
 	deleteChan   chan string
 }
 
-func NewTagService(redisClient redis.Backend, bufSize int) *TagService {
+func NewTagService(cfg *config.GlobalConfig, redisClient redis.Backend, bufSize int) *TagService {
+	if !cfg.Aegis.Tags {
+		return nil
+	}
 	return &TagService{
 		redis:        redisClient,
 		registerChan: make(chan TagEvent, bufSize),

@@ -8,8 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Load() (*Config, error) {
-	data, err := os.ReadFile("./aegis.yaml")
+func Load(f string) (*Config, error) {
+	data, err := os.ReadFile(f)
 	if err != nil {
 		return nil, err
 	}
@@ -24,6 +24,16 @@ func Load() (*Config, error) {
 }
 
 func PrintConfig(c *Config) {
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		fmt.Printf("Error printing config: %v\n", err)
+		return
+	}
+	fmt.Println("--- Aegis Configuration ---")
+	fmt.Println(string(data))
+	fmt.Println("---------------------------")
+}
+func PrintRTConfig(c *RuntimeConfig) {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		fmt.Printf("Error printing config: %v\n", err)

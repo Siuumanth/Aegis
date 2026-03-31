@@ -25,14 +25,14 @@ import (
 */
 func main() {
 	// yaml parser
-	configStruct, err := config.Load()
+	rawConfig, err := config.Load("test.yaml")
 	if err != nil {
 		panic(err)
 	}
-	config.PrintConfig(configStruct)
+	//config.PrintConfig(rawConfig)
 
-	cfg := config.BuildRuntimeConfig(configStruct)
-
+	cfg := config.BuildRuntimeConfig(rawConfig)
+	config.PrintRTConfig(cfg)
 	// Create a gloabl context to to pass around, specially for async workers
 	globalCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -44,10 +44,14 @@ func main() {
 	// 2. the handler needs the client to access redis
 	// 3. the router needs the policy engine and handler
 	hk := hotkeys.NewHotKeyService(cfg.GlobalConfig, redisClient, config.DefaultHotKeyBufSize)
-	tag := tags.NewTagService(redisClient, config.DefaultTagBufSize)
+	tag := tags.NewTagService(cfg.GlobalConfig, redisClient, config.DefaultTagBufSize)
 	// init tags and hot keys
-	hk.Init(globalCtx, config.DefaultHotKeyWorkers)
-	tag.Init(globalCtx, config.DefaultTagWorkers)
+	if hk != nil {
+		hk.Init(globalCtx, config.DefaultHotKeyWorkers)
+	}
+	if tag != nil {
+		tag.Init(globalCtx, config.DefaultTagWorkers)
+	}
 
 	// build router components
 	h := handler.NewHandler(redisClient, hk, tag) // sf initialized internally
@@ -59,7 +63,6 @@ func main() {
 	// start server and for each connection, handle it
 
 	fmt.Println("Starting AEGIS TCP Server...")
-	return
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", ":6379")
 	if err != nil {

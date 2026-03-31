@@ -21,6 +21,7 @@ uses resolved TTL correctly
 
 // for default and hot keys
 type GlobalConfig struct {
+	Aegis    *Aegis
 	HotKeys  *HotKeysConfig
 	Defaults *DefaultConfig
 }
@@ -38,8 +39,12 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 		cfg.Aegis = &Aegis{}
 	}
 
+	if cfg.Aegis.HotKeys == false {
+		cfg.HotKeys = nil
+	}
+
 	rt := &RuntimeConfig{
-		GlobalConfig:    &GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
+		GlobalConfig:    &GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults, Aegis: cfg.Aegis},
 		PatternPolicies: make(map[string]PolicyConfig),
 	}
 
@@ -64,14 +69,14 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 		}
 
 		// check aegis features enabled or not and make it nil
-		if !cfg.Aegis.HotKeys {
+		if !cfg.Aegis.HotKeys || (pc.HotKeys != nil && !pc.HotKeys.Enabled) {
 			pc.HotKeys = nil
 		}
-		if !cfg.Aegis.Tags {
+		if !cfg.Aegis.Tags || pc.Tags == nil {
 			pc.Tags = nil
 		}
 		if !cfg.Aegis.Singleflight {
-			pc.Singleflight = false
+			pc.Singleflight = DefaultSingleflightEnabled
 		}
 
 		// pattern-based
