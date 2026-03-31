@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"Aegis/config"
 	"Aegis/internal/policy"
 	"Aegis/internal/resp"
 	"Aegis/internal/shared"
@@ -24,7 +23,7 @@ func (h *Handler) Set(ctx context.Context, req *Request) error {
 	// parse client TTL from args if provided (EX 300)
 	var ttl time.Duration
 	clientTTL := parseClientTTL(req.Cmd.Args)
-	if req.Policy != nil && req.Policy.TTL != config.DefaultTTL {
+	if req.Policy != nil && *req.Policy.TTL != 0 {
 		// resolve final TTL against policy bounds
 		ttl = policy.ResolveTTL(req.Policy, clientTTL)
 	} else {

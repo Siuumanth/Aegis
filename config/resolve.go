@@ -4,6 +4,21 @@ import (
 	"time"
 )
 
+/*
+BEHAVIOUR:
+TTL:
+nil  → fallback (defaults → system)
+0    → explicit no expiry
+>0   → use value
+
+MinTTL / MaxTTL:
+nil  → fallback
+>0   → apply
+
+HotKeys:
+uses resolved TTL correctly
+*/
+
 // for default and hot keys
 type GlobalConfig struct {
 	HotKeys  *HotKeysConfig
@@ -18,13 +33,11 @@ type RuntimeConfig struct {
 
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
+	// redundant ig
 	if cfg.Aegis == nil {
 		cfg.Aegis = &Aegis{}
 	}
-	// first step, check if features are true
-	if !cfg.Aegis.HotKeys {
-		cfg.HotKeys = nil
-	}
+
 	rt := &RuntimeConfig{
 		GlobalConfig:    &GlobalConfig{HotKeys: cfg.HotKeys, Defaults: cfg.Defaults},
 		PatternPolicies: make(map[string]PolicyConfig),
@@ -38,14 +51,18 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 
 		pc := p.Config
 
-		// normalize TTL bounds
-		if pc.MinTTL > 0 && pc.TTL < pc.MinTTL {
-			pc.TTL = pc.MinTTL
+		// normalize TTL bounds (only if ttl > 0)
+		if pc.TTL != nil && *pc.TTL > 0 {
+			if pc.MinTTL != nil && *pc.MinTTL > 0 && *pc.TTL < *pc.MinTTL {
+				val := *pc.MinTTL
+				pc.TTL = &val
+			}
+			if pc.MaxTTL != nil && *pc.MaxTTL > 0 && *pc.TTL > *pc.MaxTTL {
+				val := *pc.MaxTTL
+				pc.TTL = &val
+			}
 		}
-		if pc.MaxTTL > 0 && pc.TTL > pc.MaxTTL {
-			pc.TTL = pc.MaxTTL
-		}
-		// boool defaults to false so thats good
+
 		// check aegis features enabled or not and make it nil
 		if !cfg.Aegis.HotKeys {
 			pc.HotKeys = nil
@@ -61,23 +78,61 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 		if p.Match.Pattern != "" {
 			rt.PatternPolicies[p.Match.Pattern] = pc
 		}
-
 	}
 
 	return rt
 }
 
 // merge defaults into policy config
+// merge defaults into policy config
 func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 
 	// prefer explicit, else fallback
 	if !pc.Singleflight {
-		// auto false if not present
-		pc.Singleflight = DefaultSingleflightEnabled
+		pc.Singleflight = cfg.Aegis.Singleflight // its false by default
 	}
 
-	// if hot key is enabled then chesck and use defaults
+	// ---------------- TTL RESOLUTION ----------------
+
+	if pc.TTL == nil {
+		// fallback chain
+		if cfg.Defaults != nil && cfg.Defaults.TTL != nil {
+			val := *cfg.Defaults.TTL
+			pc.TTL = &val
+		} else {
+			val := DefaultTTL
+			pc.TTL = &val
+		}
+	}
+	// pc.TTL == 0 explicitly means noo expiry, DO NOT override
+
+	// ---------------- MIN TTL ----------------
+
+	if pc.MinTTL == nil {
+		if cfg.Defaults != nil && cfg.Defaults.MinTTL != nil {
+			val := *cfg.Defaults.TTL
+			pc.TTL = &val
+		} else {
+			val := DefaultMinTTL
+			pc.MinTTL = &val
+		}
+	}
+
+	// ---------------- MAX TTL ----------------
+
+	if pc.MaxTTL == nil {
+		if cfg.Defaults != nil && cfg.Defaults.MaxTTL != nil {
+			val := *cfg.Defaults.TTL
+			pc.TTL = &val
+		} else {
+			val := DefaultMaxTTL
+			pc.MaxTTL = &val
+		}
+	}
+
+	// if hot key is enabled then check and use defaults
 	if pc.HotKeys != nil && pc.HotKeys.Enabled {
+
 		if pc.HotKeys.Window == 0 {
 			pc.HotKeys.Window = DefaultHotKeyWindow
 		}
@@ -87,35 +142,28 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 		if pc.HotKeys.TTLMultiplier == 0 {
 			pc.HotKeys.TTLMultiplier = DefaultHotKeyTTLMultiplier
 		}
-		// min extend interval and stale after
+
+		// min extend interval
 		if pc.HotKeys.MinExtendInterval == 0 && cfg.HotKeys != nil {
-			// give the global value if not assigned
 			pc.HotKeys.MinExtendInterval = cfg.HotKeys.MinExtendInterval
 		}
+
+		// stale after
 		if pc.HotKeys.StaleAfter == 0 {
-			// default to multiplier * TTL
-			pc.HotKeys.StaleAfter = pc.TTL * time.Duration(pc.HotKeys.TTLMultiplier)
+			var ttl time.Duration
+			if pc.TTL != nil {
+				ttl = *pc.TTL
+			}
+			pc.HotKeys.StaleAfter = time.Duration(float64(ttl) * pc.HotKeys.TTLMultiplier)
 		}
 	}
-
-	// do same for all other values like ttl, min_ttl, max_ttl...
-	// but if ttl is not defined, it will be 0 automatically and will be ignored
-	// but lets make a default custom logic
-	// configute ttls
-	if cfg.Defaults == nil {
-		return
-	}
-	pc.TTL = pickDuration(pc.TTL, pickDuration(cfg.Defaults.TTL, DefaultTTL))
-	pc.MinTTL = pickDuration(pc.MinTTL, pickDuration(cfg.Defaults.MinTTL, DefaultMinTTL))
-	pc.MaxTTL = pickDuration(pc.MaxTTL, pickDuration(cfg.Defaults.MaxTTL, DefaultMaxTTL))
-
 }
 
 func mergeGlobal(global *GlobalConfig) {
 	if global.HotKeys == nil {
 		return
 	}
-	// check hot keys
+
 	if global.HotKeys.MaxTracked == 0 {
 		global.HotKeys.MaxTracked = DefaultMaxTrackedKeys
 	}
@@ -123,17 +171,9 @@ func mergeGlobal(global *GlobalConfig) {
 		global.HotKeys.CleanupInterval = DefaultCleanupInterval
 	}
 	if global.HotKeys.StaleAfter == 0 {
-		// default to multiplier * TTL
 		global.HotKeys.StaleAfter = DefaultStaleAfter
 	}
 	if global.HotKeys.MinExtendInterval == 0 {
 		global.HotKeys.MinExtendInterval = DefaultMinExtendInterval
 	}
-}
-
-func pickDuration(a, b time.Duration) time.Duration {
-	if a != 0 {
-		return a
-	}
-	return b
 }

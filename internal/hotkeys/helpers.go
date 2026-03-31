@@ -24,6 +24,7 @@ func (h *HotKeyService) cleanup() {
 // extend ttl logic, ttl * multiplier
 // policy specific
 // maybe bad design cuz extend knows policy
+// TODO: Shud i take max TTL into account?
 func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.PolicyConfig) error {
 	// check if we need to extend with mutex
 	h.mu.Lock()
@@ -40,7 +41,7 @@ func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.P
 	// 2. Prepare the command, no CS
 	policyTTL := policy.TTL
 	multiplier := policy.HotKeys.TTLMultiplier
-	newTTL := time.Duration(float64(policyTTL) * multiplier)
+	newTTL := time.Duration(float64(*policyTTL) * multiplier)
 
 	// 3. Network call to increase TTL
 	if err := h.redis.Expire(ctx, key, newTTL); err != nil {

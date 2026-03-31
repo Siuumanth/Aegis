@@ -59,6 +59,7 @@ func main() {
 	// start server and for each connection, handle it
 
 	fmt.Println("Starting AEGIS TCP Server...")
+	return
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", ":6379")
 	if err != nil {

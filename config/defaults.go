@@ -4,10 +4,11 @@ import "time"
 
 // ===== TTL Defaults =====
 // unbounded
+// these ttls are for no expiry
 const (
-	DefaultTTL    = 0 * time.Second
+	DefaultTTL    = 60 * time.Second
 	DefaultMinTTL = 0 * time.Second
-	DefaultMaxTTL = 0 * time.Minute
+	DefaultMaxTTL = 0 * time.Second
 )
 
 // ===== Singleflight =====

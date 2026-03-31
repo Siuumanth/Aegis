@@ -2,6 +2,7 @@ package config
 
 import "time"
 
+// TODO: REmove tag policy matching optoons
 // top level config
 type Config struct {
 	Server   *ServerConfig  `yaml:"server"`
@@ -40,9 +41,9 @@ type RedisConfig struct {
 // global defaults applied to all matched keys unless overridden
 
 type DefaultConfig struct {
-	TTL    time.Duration `yaml:"ttl"`
-	MinTTL time.Duration `yaml:"min_ttl"`
-	MaxTTL time.Duration `yaml:"max_ttl"`
+	TTL    *time.Duration `yaml:"ttl"`
+	MinTTL *time.Duration `yaml:"min_ttl"`
+	MaxTTL *time.Duration `yaml:"max_ttl"`
 }
 
 // system-wide hot key settings, per-pattern config lives in Policy
@@ -61,17 +62,17 @@ type Policy struct {
 }
 
 type MatchConfig struct {
-	Pattern string `yaml:"pattern"` // glob, e.g. "user:*"
-	Tag     string `yaml:"tag"`     // tag name, e.g. "users"
+	Pattern string `yaml:"pattern"` // glob, eg "user:*"
+	Tag     string `yaml:"tag"`     // tag name, eg "users"
 }
 
 type PolicyConfig struct {
-	TTL          time.Duration `yaml:"ttl"`
-	MinTTL       time.Duration `yaml:"min_ttl"`
-	MaxTTL       time.Duration `yaml:"max_ttl"`
-	Singleflight bool          `yaml:"singleflight"`
-	Tags         []string      `yaml:"tags"`
-	HotKeys      *HotKeyPolicy `yaml:"hot_key"`
+	TTL          *time.Duration `yaml:"ttl"`
+	MinTTL       *time.Duration `yaml:"min_ttl"`
+	MaxTTL       *time.Duration `yaml:"max_ttl"`
+	Singleflight bool           `yaml:"singleflight"`
+	Tags         []string       `yaml:"tags"`
+	HotKeys      *HotKeyPolicy  `yaml:"hot_key"`
 }
 
 type HotKeyPolicy struct {
