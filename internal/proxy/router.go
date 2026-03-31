@@ -57,7 +57,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		return r.handler.Del(ctx, req)
 
 	default:
-		if strings.HasPrefix(CMD, "AEGIS.") {
+		if strings.HasPrefix(strings.ToUpper(CMD), "AEGIS.") {
 			return r.RouteCustom(ctx, CMD, req)
 		}
 		err := r.handler.DefaultHandler(ctx, req)
@@ -69,7 +69,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 }
 
 func (r *Router) RouteCustom(ctx context.Context, cmd string, req *handler.Request) error {
-	switch cmd {
+	switch strings.ToUpper(cmd) {
 	case "AEGIS.INVALIDATE":
 		return r.handler.Invalidate(ctx, req)
 	default:
