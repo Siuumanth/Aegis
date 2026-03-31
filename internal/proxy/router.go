@@ -44,9 +44,9 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	CMD := strings.ToUpper(cmd.Name)
 	switch CMD {
 	case "GET":
-		return r.handler.Get(req)
+		return r.handler.Get(ctx, req)
 	case "SET":
-		return r.handler.Set(req)
+		return r.handler.Set(ctx, req)
 	case "HELLO":
 		conn.Write([]byte("*2\r\n$6\r\nserver\r\n$5\r\nredis\r\n"))
 		return nil
@@ -54,13 +54,13 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		conn.Write([]byte("+OK\r\n"))
 		return nil
 	case "DEL":
-		return r.handler.Del(req)
+		return r.handler.Del(ctx, req)
 
 	default:
 		if strings.HasPrefix(CMD, "AEGIS.") {
-			return r.RouteCustom(CMD, req)
+			return r.RouteCustom(ctx, CMD, req)
 		}
-		err := r.handler.DefaultHandler(req)
+		err := r.handler.DefaultHandler(ctx, req)
 		if err != nil {
 			return resp.WriteError(conn, shared.ErrBackend)
 		}
@@ -68,10 +68,10 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	return nil
 }
 
-func (r *Router) RouteCustom(cmd string, req *handler.Request) error {
+func (r *Router) RouteCustom(ctx context.Context, cmd string, req *handler.Request) error {
 	switch cmd {
 	case "AEGIS.INVALIDATE":
-		return r.handler.Invalidate(req)
+		return r.handler.Invalidate(ctx, req)
 	default:
 		return resp.WriteError(req.Conn, shared.ErrInvalidCommand)
 	}

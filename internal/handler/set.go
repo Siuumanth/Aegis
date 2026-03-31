@@ -19,7 +19,7 @@ SET:
 	→ tags.Register(key, policy.Tags, cmd.ATags)
 	→ resp.Write(OK)
 */
-func (h *Handler) Set(req *Request) error {
+func (h *Handler) Set(ctx context.Context, req *Request) error {
 	// if no ttl in yaml then we gotta do no ttl modificiation
 	// parse client TTL from args if provided (EX 300)
 	var ttl time.Duration
@@ -32,7 +32,7 @@ func (h *Handler) Set(req *Request) error {
 	}
 
 	value := req.Cmd.Args[0] // value being set
-	if err := h.redis.Set(context.TODO(), req.Cmd.Key, value, ttl); err != nil {
+	if err := h.redis.Set(ctx, req.Cmd.Key, value, ttl); err != nil {
 		return resp.WriteError(req.Conn, shared.ErrBackend)
 	}
 	args := req.Cmd.Args[1:] // passing only modifiers

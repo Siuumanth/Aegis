@@ -57,7 +57,7 @@ func (c *Conn) Handle(globalCtx context.Context) {
 			return
 		}
 
-		// 4. Route request
+		// 4. Route request with request context
 		if err := c.router.Route(ctx, cmd, c.conn); err != nil {
 			// if write fails → client likely gone
 			fmt.Printf("routing error: %v\n", err)

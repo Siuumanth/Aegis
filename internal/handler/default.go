@@ -6,8 +6,7 @@ import (
 	"context"
 )
 
-func (h *Handler) DefaultHandler(req *Request) error {
-	ctx := context.TODO()
+func (h *Handler) DefaultHandler(ctx context.Context, req *Request) error {
 	result, err := h.redis.PassThrough(ctx, req.Cmd)
 	if err != nil {
 		return resp.WriteError(req.Conn, shared.ErrBackend)

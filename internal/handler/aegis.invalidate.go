@@ -6,8 +6,7 @@ import (
 	"context"
 )
 
-func (h *Handler) Invalidate(req *Request) error {
-	ctx := context.TODO()
+func (h *Handler) Invalidate(ctx context.Context, req *Request) error {
 
 	// validate args
 	if len(req.Cmd.Args) < 1 {

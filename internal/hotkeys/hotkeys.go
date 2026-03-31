@@ -75,10 +75,11 @@ func (h *HotKeyService) Init(ctx context.Context, workers int) {
 		go func() {
 			for {
 				select {
-				case ev := <-h.hkChan:
-					h.increment(ctx, ev.key, ev.policy)
 				case <-ctx.Done():
 					return
+				case ev := <-h.hkChan:
+					h.increment(ctx, ev.key, ev.policy)
+
 				}
 			}
 		}()

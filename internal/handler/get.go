@@ -15,13 +15,13 @@ GET:
     → hotkeys.Track(key)        ← async, worker pool
 */
 
-func (h *Handler) Get(req *Request) error {
+func (h *Handler) Get(ctx context.Context, req *Request) error {
 	// 1. Send singleflight
 	var (
 		val string
 		err error
 	)
-	ctx := context.TODO()
+
 	if h.sf != nil {
 		var result any
 		result, err = h.sf.Do(ctx, req.Cmd.Key, func() (any, error) {

@@ -6,8 +6,7 @@ import (
 	"context"
 )
 
-func (h *Handler) Del(req *Request) error {
-	ctx := context.TODO()
+func (h *Handler) Del(ctx context.Context, req *Request) error {
 
 	// 1. delete key from Redis
 	if err := h.redis.Del(ctx, req.Cmd.Key); err != nil {
