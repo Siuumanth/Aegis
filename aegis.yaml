@@ -38,7 +38,7 @@ policies:
     match:
       pattern: "user:*"
     config:
-      ttl: 0s
+      ttl: 60s
       # min_ttl: 5s
       max_ttl: 10m
       singleflight: true

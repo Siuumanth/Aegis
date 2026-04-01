@@ -25,7 +25,7 @@ import (
 */
 func main() {
 	// yaml parser
-	rawConfig, err := config.Load("test.yaml")
+	rawConfig, err := config.Load("aegis.yaml")
 	if err != nil {
 		panic(err)
 	}

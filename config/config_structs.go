@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-// TODO: REmove tag policy matching optoons
+// V2: Add tag based config
 // top level config
 type Config struct {
 	Server   *ServerConfig  `yaml:"server"`
@@ -63,7 +63,7 @@ type Policy struct {
 
 type MatchConfig struct {
 	Pattern string `yaml:"pattern"` // glob, eg "user:*"
-	Tag     string `yaml:"tag"`     // tag name, eg "users"
+	//Tag     string `yaml:"tag"`     // tag name, eg "users"
 }
 
 type PolicyConfig struct {

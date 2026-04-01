@@ -23,7 +23,7 @@ func main() {
 	ctx := context.Background()
 
 	// mode := "load"
-	mode := "itl"
+	mode := "load"
 	// it for interactive
 
 	rdb := redis.NewClient(&redis.Options{
@@ -33,11 +33,12 @@ func main() {
 		ReadTimeout:  200 * time.Millisecond,
 	})
 
-	if mode == "it" {
+	switch mode {
+	case "it":
 		runREPL(ctx, rdb)
-	} else if mode == "load" {
+	case "load":
 		runBenchmark(ctx, rdb)
-	} else {
+	default:
 		runBenchmark(ctx, rdb)
 
 		runREPL(ctx, rdb)
@@ -54,12 +55,12 @@ func runBenchmark(ctx context.Context, rdb *redis.Client) {
 	for i := 0; i < TEST_COUNT; i++ {
 		key := fmt.Sprintf("user:%d", rand.Intn(100))
 		val := fmt.Sprintf("data-%d", i)
-		ttl := 100 * time.Second
+		//ttl := 100 * time.Second
 
 		start := time.Now()
 
 		// SET + GET sequence
-		if err := rdb.Set(ctx, key, val, ttl).Err(); err != nil {
+		if err := rdb.Do(ctx, "SET", key, val).Err(); err != nil {
 			fmt.Printf("SET Error: %v\n", err)
 			continue
 		}
