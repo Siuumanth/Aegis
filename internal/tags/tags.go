@@ -5,6 +5,7 @@ import (
 	"Aegis/internal/redis"
 	"context"
 	"fmt"
+	"sync"
 )
 
 /*
@@ -39,6 +40,7 @@ type TagService struct {
 	redis        redis.Backend
 	registerChan chan TagEvent
 	deleteChan   chan string
+	wg           sync.WaitGroup
 }
 
 func NewTagService(cfg *config.GlobalConfig, redisClient redis.Backend, bufSize int) *TagService {
@@ -56,19 +58,39 @@ func NewTagService(cfg *config.GlobalConfig, redisClient redis.Backend, bufSize 
 func (t *TagService) Init(ctx context.Context, workers int) {
 	// proper global context cancellation
 	for i := 0; i < workers; i++ {
+		t.wg.Add(1)
 		go func() {
+			defer t.wg.Done()
 			for {
 				select {
-				case ev := <-t.registerChan:
-					t.register(ctx, ev)
-				case key := <-t.deleteChan:
-					t.delete(ctx, key)
 				case <-ctx.Done():
 					return
+				case ev, ok := <-t.registerChan:
+					if !ok {
+						return
+					}
+					t.register(ctx, ev)
+
+				case key, ok := <-t.deleteChan:
+					if !ok {
+						return
+					}
+					t.delete(ctx, key)
 				}
+
 			}
 		}()
 	}
+}
+
+// closing channels
+func (t *TagService) Stop() {
+	close(t.registerChan)
+	close(t.deleteChan)
+}
+
+func (t *TagService) Wait() {
+	t.wg.Wait()
 }
 
 // Register enqueues a tag registration event from SET or ATAG, non-blocking

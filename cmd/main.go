@@ -40,10 +40,9 @@ func main() {
 	defer stop()
 
 	globalCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	// Building router + dependencies
-	router := buildRouter(cfg, rawConfig, globalCtx)
+	router, hk, tag := buildRouter(cfg, rawConfig, globalCtx)
 
 	// start server and for each connection, handle it
 	fmt.Printf("AEGIS listening on %s:%d\n", rawConfig.Server.Host, rawConfig.Server.Port)
@@ -52,6 +51,20 @@ func main() {
 	if err := serve(rawConfig.Server, router, globalCtx); err != nil {
 		fmt.Println("Server error:", err)
 	}
+	// cancel global gorutine
+	cancel()
+
+	// graceful shutdown, wait for all async workers to finish
+	if hk != nil {
+		hk.Stop()
+		hk.Wait()
+	}
+	if tag != nil {
+		tag.Stop()
+		tag.Wait()
+	}
+	// wait - waits till all async workers return
+	// stop - closes channel
 	fmt.Println("AEGIS TCP Server Stopped.")
 }
 
@@ -63,7 +76,7 @@ func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context,
 	pconn.Handle(globalCtx)
 }
 
-func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx context.Context) *proxy.Router {
+func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx context.Context) (*proxy.Router, *hotkeys.HotKeyService, *tags.TagService) {
 	// build dependencies
 	// 1. new redis backend client
 	redisClient := redis.NewClient(rawConfig.Redis)
@@ -87,7 +100,7 @@ func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx 
 
 	// 4. create the router
 	router := proxy.NewRouter(cfg, h, p)
-	return router
+	return router, hk, tag
 }
 
 func serve(scfg *config.ServerConfig, router *proxy.Router, globalCtx context.Context) error {

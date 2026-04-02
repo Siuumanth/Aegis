@@ -56,6 +56,7 @@ type HotKeyService struct {
 	maxKeys         int
 	redis           redis.Backend // innterface so no ref
 	cleanupInterval time.Duration
+	wg              sync.WaitGroup
 
 	// policy specific
 	// staleAfter        time.Duration
@@ -73,6 +74,7 @@ func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bu
 		maxKeys:         global.HotKeys.MaxTracked,
 		redis:           redisClient,
 		cleanupInterval: global.HotKeys.CleanupInterval,
+		wg:              sync.WaitGroup{},
 
 		// minExtendInterval: global.HotKeys.MinExtendInterval,
 		// staleAfter:        global.HotKeys.StaleAfter,
@@ -82,32 +84,50 @@ func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bu
 // Start spawns N workers draining the event channel + cleanup goroutine
 func (h *HotKeyService) Init(ctx context.Context, workers int) {
 	for i := 0; i < workers; i++ {
+		h.wg.Add(1)
 		go func() {
+			defer h.wg.Done()
+
 			for {
 				select {
 				case <-ctx.Done():
 					return
-				case ev := <-h.hkChan:
+				case ev, ok := <-h.hkChan:
+					// tis is just for checking always if context is done
+					// instead of blocking on channel
+					if !ok {
+						return
+					}
 					h.increment(ctx, ev.key, ev.policy)
-
 				}
 			}
 		}()
 	}
 
 	// cleanup goroutine resets counts and evicts stale keys
+	h.wg.Add(1)
 	go func() {
+		defer h.wg.Done()
 		ticker := time.NewTicker(h.cleanupInterval)
 		defer ticker.Stop()
 		for {
 			select {
-			case <-ticker.C:
-				h.cleanup()
 			case <-ctx.Done():
 				return
+			case <-ticker.C:
+				h.cleanup()
+
 			}
 		}
 	}()
+}
+
+// wait method for wait groups
+func (h *HotKeyService) Wait() {
+	h.wg.Wait()
+}
+func (h *HotKeyService) Stop() {
+	close(h.hkChan)
 }
 
 // Track enqueues a key event, non-blocking
