@@ -165,7 +165,7 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 }
 
 func mergeGlobal(global *GlobalConfig) {
-	if global.HotKeys == nil {
+	if global.HotKeys == nil || global.Aegis.HotKeys == false {
 		return
 	}
 
@@ -181,4 +181,8 @@ func mergeGlobal(global *GlobalConfig) {
 	if global.HotKeys.MinExtendInterval == 0 {
 		global.HotKeys.MinExtendInterval = DefaultMinExtendInterval
 	}
+	if global.HotKeys.Window == 0 {
+		global.HotKeys.Window = DefaultHotKeyWindow
+	}
+
 }

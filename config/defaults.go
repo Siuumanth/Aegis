@@ -19,7 +19,7 @@ const (
 // ===== Hot Key Defaults =====
 const (
 	DefaultHotKeyEnabled       = false
-	DefaultHotKeyWindow        = 1 * time.Second
+	DefaultHotKeyWindow        = 2 * time.Second
 	DefaultHotKeyThreshold     = 100
 	DefaultHotKeyTTLMultiplier = 2.0
 )

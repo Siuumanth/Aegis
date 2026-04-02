@@ -45,7 +45,7 @@ policies:
       tags: [users,profile]
       hot_key:
         enabled: true
-        window: 1s
+        window: 2s
         threshold: 100
         ttl_multiplier: 3
      

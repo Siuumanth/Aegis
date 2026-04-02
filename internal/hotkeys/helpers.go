@@ -28,7 +28,6 @@ func (h *HotKeyService) cleanup() {
 // extend ttl logic, ttl * multiplier
 // policy specific
 // maybe bad design cuz extend knows policy
-// TODO: Shud i take max TTL into account?
 func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.PolicyConfig) error {
 	if policy.TTL == nil || *policy.TTL == 0 {
 		return nil // don’t extend infinite keys
@@ -50,6 +49,10 @@ func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.P
 	policyTTL := policy.TTL
 	multiplier := policy.HotKeys.TTLMultiplier
 	newTTL := time.Duration(float64(*policyTTL) * multiplier)
+	// clamp TTL
+	if newTTL > *policyTTL {
+		newTTL = *policyTTL
+	}
 
 	// 3. Network call to increase TTL
 	if err := h.redis.Expire(ctx, key, newTTL); err != nil {

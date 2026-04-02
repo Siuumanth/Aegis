@@ -52,6 +52,7 @@ type HotKeysConfig struct {
 	CleanupInterval   time.Duration `yaml:"cleanup_interval"`
 	StaleAfter        time.Duration `yaml:"stale_after"`
 	MinExtendInterval time.Duration `yaml:"min_extend_interval"`
+	Window            time.Duration `yaml:"window"`
 }
 
 // one policy block in the policies list
