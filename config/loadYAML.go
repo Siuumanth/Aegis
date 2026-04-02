@@ -48,7 +48,7 @@ func PrintSummary(c *Config) {
 	fmt.Println("🛡️  Aegis Configuration Loaded")
 	fmt.Println("======================================")
 
-	fmt.Printf("🌐 SERVER:  %s:%d (Max Conns: %d)\n", c.Server.Host, c.Server.Port, c.Server.MaxConnections)
+	fmt.Printf("🌐 SERVER:  %s:%d \n", c.Server.Host, c.Server.Port)
 	fmt.Printf("📦 REDIS:   %s (Pool: %d)\n", c.Redis.Address, c.Redis.PoolSize)
 
 	fmt.Println("\n⚙️  FEATURES:")

@@ -32,24 +32,20 @@ const (
 	DefaultMinExtendInterval = 5 * time.Second
 )
 
-// ===== Redis Client Defaults =====
+// ===== Redis Client and Server Defaults Defaults =====
 const (
-	DefaultRedisPort         = 6380
-	DefaultRedisPoolSize     = 100
-	DefaultRedisMinIdleConns = 10
-	DefaultRedisMaxRetries   = 2
-	DefaultDialTimeout       = 5 * time.Second
-	DefaultReadTimeout       = 3 * time.Second
-	DefaultWriteTimeout      = 3 * time.Second
-)
+	DefaultServerHost         = "0.0.0.0"
+	DefaultServerPort         = 6379
+	DefaultServerReadTimeout  = 60 * time.Second
+	DefaultServerWriteTimeout = 5 * time.Second
 
-// ===== Server Defaults =====
-const (
-	DefaultHost           = "0.0.0.0"
-	DefaultPort           = 6379
-	DefaultMaxConnections = 10000
-	DefaultServerReadTO   = 30 * time.Second
-	DefaultServerWriteTO  = 30 * time.Second
+	DefaultRedisAddress      = "localhost:6379"
+	DefaultRedisPoolSize     = 10
+	DefaultRedisMinIdleConns = 2
+	DefaultRedisDialTimeout  = 5 * time.Second
+	DefaultRedisReadTimeout  = 3 * time.Second
+	DefaultRedisWriteTimeout = 3 * time.Second
+	DefaultRedisMaxRetries   = 2
 )
 
 // WP AND TAG PROCESS defaults

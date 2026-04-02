@@ -35,7 +35,6 @@ policy * multiplier + last updated is more than the current time , then ill know
 
 */
 
-// TODO: make it so that hot keys only depeend on hot keys  policy, not the whole
 // rn in v1, it depends on the ttl in the policy config , in extend, which logic can be improved
 type HotKeyEntry struct {
 	count         int64

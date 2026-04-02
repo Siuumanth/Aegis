@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"Aegis/config"
 	"Aegis/internal/resp"
 	"context"
 	"time"
@@ -73,11 +74,17 @@ type Client struct {
 	rdb *goredis.Client
 }
 
-func NewClient(addr string) *Client {
+func NewClient(cfg *config.RedisConfig) *Client {
 	return &Client{
 		rdb: goredis.NewClient(&goredis.Options{
-			Addr:     addr,
-			Protocol: 2,
+			Addr:         cfg.Address,
+			PoolSize:     cfg.PoolSize,
+			MinIdleConns: cfg.MinIdleConns,
+			DialTimeout:  cfg.DialTimeout,
+			ReadTimeout:  cfg.ReadTimeout,
+			WriteTimeout: cfg.WriteTimeout,
+			MaxRetries:   cfg.MaxRetries,
+			Protocol:     2,
 		}),
 	}
 }

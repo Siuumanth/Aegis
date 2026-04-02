@@ -11,16 +11,20 @@ import (
 
 // Conn handles a single client connection lifecycle
 type Conn struct {
-	conn   net.Conn
-	parser *resp.Parser
-	router *Router
+	conn         net.Conn
+	parser       *resp.Parser
+	router       *Router
+	readTimeout  time.Duration
+	writeTimeout time.Duration
 }
 
-func NewConn(conn net.Conn, router *Router, parser *resp.Parser) *Conn {
+func NewConn(conn net.Conn, router *Router, parser *resp.Parser, readTimeout, writeTimeout time.Duration) *Conn {
 	return &Conn{
-		conn:   conn,
-		parser: parser,
-		router: router,
+		conn:         conn,
+		parser:       parser,
+		router:       router,
+		readTimeout:  readTimeout,
+		writeTimeout: writeTimeout,
 	}
 }
 
@@ -40,7 +44,7 @@ func (c *Conn) Handle(globalCtx context.Context) {
 		}
 
 		// 2. Set read deadline (prevents dead connections)
-		_ = c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		_ = c.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
 
 		// 3. Parse request
 		cmd, err := c.parser.Parse()

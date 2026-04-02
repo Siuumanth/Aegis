@@ -1,10 +1,9 @@
 server:
   host: "0.0.0.0"
   port: 6379
-  read_timeout: 30s
-  write_timeout: 30s
-  max_connections: 10000
-
+  read_timeout: 60s
+  write_timeout: 5s
+  
 redis:
   address: "localhost:6380"
   pool_size: 100

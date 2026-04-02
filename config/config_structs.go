@@ -21,11 +21,10 @@ type Aegis struct {
 }
 
 type ServerConfig struct {
-	Host           string        `yaml:"host"`
-	Port           int           `yaml:"port"`
-	ReadTimeout    time.Duration `yaml:"read_timeout"`
-	WriteTimeout   time.Duration `yaml:"write_timeout"`
-	MaxConnections int           `yaml:"max_connections"`
+	Host         string        `yaml:"host"`
+	Port         int           `yaml:"port"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 type RedisConfig struct {

@@ -10,7 +10,7 @@ const (
 	TagModeSkip                    // AEGIS.NOTAG — skip tagging entirely
 )
 
-// TODO: handle cases like aegis commands are not last
+// V2: handle cases like aegis commands are not last
 // parseTagArgs scans SET args for AEGIS.TAG, AEGIS.TAG_ONLY, AEGIS.NOTAG
 func parseTagArgs(args []string) (TagMode, []string) {
 	// parse all args and check for tag modifiers

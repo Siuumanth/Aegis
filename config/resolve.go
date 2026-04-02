@@ -34,6 +34,17 @@ type RuntimeConfig struct {
 
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
+	// TODO: ORganise code better
+	if cfg.Server == nil {
+		cfg.Server = &ServerConfig{}
+	}
+	if cfg.Redis == nil {
+		cfg.Redis = &RedisConfig{}
+	}
+
+	// apply redis and server defaults
+	applyServerDefaults(cfg.Server)
+	applyRedisDefaults(cfg.Redis)
 	if cfg.Aegis == nil {
 		cfg.Aegis = &Aegis{}
 	}

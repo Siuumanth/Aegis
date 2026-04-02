@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 )
 
 /*
@@ -39,7 +40,8 @@ func main() {
 
 	// build dependencies
 	// 1. new redis backend client
-	redisClient := redis.NewClient("localhost:6380")
+	redisClient := redis.NewClient(rawConfig.Redis)
+	// tihs is resolved during building runtime config
 
 	// 2. the handler needs the client to access redis
 	// 3. the router needs the policy engine and handler
@@ -63,14 +65,14 @@ func main() {
 	// start server and for each connection, handle it
 
 	fmt.Println("Starting AEGIS TCP Server...")
-	return
+	addr := fmt.Sprintf("%s:%d", rawConfig.Server.Host, rawConfig.Server.Port)
 	// main tcp listen cmd
-	ln, err := net.Listen("tcp", ":6379")
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
 	defer ln.Close()
-	fmt.Println("AEGIS TCP Server started...")
+	fmt.Println("AEGIS is listening on PORT:", rawConfig.Server.Port)
 
 	for {
 		// for every connectoin, accept and handle
@@ -78,16 +80,14 @@ func main() {
 		if err != nil {
 			continue
 		}
-		go handleConnection(conn, router, globalCtx)
+		go handleConnection(conn, router, globalCtx, rawConfig.Server.ReadTimeout, rawConfig.Server.WriteTimeout)
 	}
 }
 
 // client = connection from app
-func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context) {
-
+func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context, readTimeout, writeTimeout time.Duration) {
 	parser := resp.NewParser(conn)
-	// get new connection
-	pconn := proxy.NewConn(conn, r, parser)
-
+	// get new conn
+	pconn := proxy.NewConn(conn, r, parser, readTimeout, writeTimeout)
 	pconn.Handle(globalCtx)
 }

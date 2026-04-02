@@ -20,6 +20,7 @@ policies:
     config:
       ttl: 837s # Should NOT be overridden by your DefaultTTL (e.g. 10s)
       # All other fields are nil. Tests your fallback to DefaultMinTTL/MaxTTL
+      tags: [forever]
 
   # 4. EDGE CASE: Conflicting TTL Bounds
   - name: "normalization-test"
