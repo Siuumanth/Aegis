@@ -53,6 +53,8 @@ type HotKeysConfig struct {
 	StaleAfter        time.Duration `yaml:"stale_after"`
 	MinExtendInterval time.Duration `yaml:"min_extend_interval"`
 	Window            time.Duration `yaml:"window"`
+	Threshold         int           `yaml:"threshold"`
+	TTLMultiplier     float64       `yaml:"ttl_multiplier"`
 }
 
 // one policy block in the policies list

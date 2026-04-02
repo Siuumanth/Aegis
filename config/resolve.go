@@ -89,8 +89,8 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 }
 
 // merge defaults into policy config
-// merge defaults into policy config
 func mergeDefaults(cfg *Config, pc *PolicyConfig) {
+	// per policy config
 
 	// prefer explicit, else fallback
 	if !pc.Singleflight {
@@ -136,7 +136,7 @@ func mergeDefaults(cfg *Config, pc *PolicyConfig) {
 	}
 
 	// if hot key is enabled then check and use defaults
-	if pc.HotKeys != nil && pc.HotKeys.Enabled {
+	if cfg.Aegis.HotKeys && pc.HotKeys != nil && pc.HotKeys.Enabled {
 
 		if pc.HotKeys.Window == 0 {
 			pc.HotKeys.Window = DefaultHotKeyWindow
@@ -183,6 +183,12 @@ func mergeGlobal(global *GlobalConfig) {
 	}
 	if global.HotKeys.Window == 0 {
 		global.HotKeys.Window = DefaultHotKeyWindow
+	}
+	if global.HotKeys.Threshold == 0 {
+		global.HotKeys.Threshold = DefaultHotKeyThreshold
+	}
+	if global.HotKeys.TTLMultiplier == 0 {
+		global.HotKeys.TTLMultiplier = DefaultHotKeyTTLMultiplier
 	}
 
 }
