@@ -38,10 +38,12 @@ policy * multiplier + last updated is more than the current time , then ill know
 // TODO: make it so that hot keys only depeend on hot keys  policy, not the whole
 // rn in v1, it depends on the ttl in the policy config , in extend, which logic can be improved
 // TODO: implement window field
+// TODO: make hot key expiry time SOLID
 type HotKeyEntry struct {
 	count         int64
 	lastIncreased time.Time            // last time the hot key ttl was extended
 	hkPolicy      *config.HotKeyPolicy // policy specific fields
+	windowEnd     time.Time
 }
 
 type hkEvent struct {
@@ -121,7 +123,11 @@ func (h *HotKeyService) Track(key string, policy *config.PolicyConfig) {
 
 // increment for each hot key
 func (h *HotKeyService) increment(ctx context.Context, key string, policy *config.PolicyConfig) {
+	if policy == nil || policy.HotKeys == nil || !policy.HotKeys.Enabled {
+		return
+	}
 	h.mu.Lock()
+	now := time.Now()
 
 	entry, ok := h.m[key]
 	if !ok {
@@ -130,14 +136,25 @@ func (h *HotKeyService) increment(ctx context.Context, key string, policy *confi
 			h.mu.Unlock()
 			return
 		}
-		h.m[key] = &HotKeyEntry{count: 1, hkPolicy: policy.HotKeys}
+		h.m[key] = &HotKeyEntry{
+			count:     1,
+			windowEnd: now.Add(policy.HotKeys.Window),
+			hkPolicy:  policy.HotKeys,
+		}
 		h.mu.Unlock()
 		return
 	}
 
-	entry.count++
+	// window logic
+	if entry.windowEnd.IsZero() || now.After(entry.windowEnd) {
+		entry.count = 1
+		entry.windowEnd = now.Add(entry.hkPolicy.Window)
+	} else {
+		entry.count++
+	}
+
 	// check if hot key is hot
-	isHot := entry.count >= policy.HotKeys.Threshold
+	isHot := entry.count >= entry.hkPolicy.Threshold
 	h.mu.Unlock() // release before spawning goroutine
 
 	if isHot {

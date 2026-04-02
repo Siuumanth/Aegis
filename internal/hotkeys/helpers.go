@@ -12,12 +12,16 @@ func (h *HotKeyService) cleanup() {
 	defer h.mu.Unlock()
 	for key, entry := range h.m {
 		// check if key is stale
-		if time.Since(entry.lastIncreased) > entry.hkPolicy.StaleAfter {
-			delete(h.m, key)
-			continue
+		now := time.Now()
+
+		if entry.lastIncreased.IsZero() {
+			continue // don’t delete fresh keys
 		}
-		// reset count so key has to re-earn hot status
-		entry.count = 0
+
+		if now.Sub(entry.lastIncreased) > entry.hkPolicy.StaleAfter {
+			delete(h.m, key)
+		}
+		// no need to reset count as window end handles it
 	}
 }
 
@@ -26,7 +30,11 @@ func (h *HotKeyService) cleanup() {
 // maybe bad design cuz extend knows policy
 // TODO: Shud i take max TTL into account?
 func (h *HotKeyService) Extend(ctx context.Context, key string, policy *config.PolicyConfig) error {
+	if policy.TTL == nil || *policy.TTL == 0 {
+		return nil // don’t extend infinite keys
+	}
 	// check if we need to extend with mutex
+
 	h.mu.Lock()
 	entry, ok := h.m[key]
 
