@@ -12,6 +12,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
 	"time"
 )
 
@@ -25,19 +27,43 @@ import (
 7. start TCP listener → on each Accept() → NewConn(conn, router) → go conn.Handle()
 */
 func main() {
-	// yaml parser
+	// Step 1: parse yaml
 	rawConfig, err := config.Load("test.yaml")
 	if err != nil {
 		panic(err)
 	}
-	//config.PrintConfig(rawConfig)
-
 	cfg := config.BuildRuntimeConfig(rawConfig)
 	config.PrintRTConfig(cfg)
-	// Create a gloabl context to to pass around, specially for async workers
-	globalCtx, cancel := context.WithCancel(context.Background())
+	//  gloabl context to to pass around, specially for async workers
+	// graceful shutdown context
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	globalCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Building router + dependencies
+	router := buildRouter(cfg, rawConfig, globalCtx)
+
+	// start server and for each connection, handle it
+	fmt.Printf("AEGIS listening on %s:%d\n", rawConfig.Server.Host, rawConfig.Server.Port)
+
+	// start server
+	if err := serve(rawConfig.Server, router, globalCtx); err != nil {
+		fmt.Println("Server error:", err)
+	}
+	fmt.Println("AEGIS TCP Server Stopped.")
+}
+
+// client = connection from app
+func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context, readTimeout, writeTimeout time.Duration) {
+	parser := resp.NewParser(conn)
+	// get new conn
+	pconn := proxy.NewConn(conn, r, parser, readTimeout, writeTimeout)
+	pconn.Handle(globalCtx)
+}
+
+func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx context.Context) *proxy.Router {
 	// build dependencies
 	// 1. new redis backend client
 	redisClient := redis.NewClient(rawConfig.Redis)
@@ -61,33 +87,31 @@ func main() {
 
 	// 4. create the router
 	router := proxy.NewRouter(cfg, h, p)
+	return router
+}
 
-	// start server and for each connection, handle it
-
-	fmt.Println("Starting AEGIS TCP Server...")
-	addr := fmt.Sprintf("%s:%d", rawConfig.Server.Host, rawConfig.Server.Port)
+func serve(scfg *config.ServerConfig, router *proxy.Router, globalCtx context.Context) error {
+	addr := fmt.Sprintf("%s:%d", scfg.Host, scfg.Port)
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
 	defer ln.Close()
-	fmt.Println("AEGIS is listening on PORT:", rawConfig.Server.Port)
+	fmt.Println("AEGIS is listening on PORT:", scfg.Port)
 
 	for {
-		// for every connectoin, accept and handle
 		conn, err := ln.Accept()
 		if err != nil {
-			continue
+			select {
+			case <-globalCtx.Done():
+				return nil // graceful shutdown
+			default:
+				fmt.Println("Accept error:", err)
+				continue
+			}
 		}
-		go handleConnection(conn, router, globalCtx, rawConfig.Server.ReadTimeout, rawConfig.Server.WriteTimeout)
-	}
-}
 
-// client = connection from app
-func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context, readTimeout, writeTimeout time.Duration) {
-	parser := resp.NewParser(conn)
-	// get new conn
-	pconn := proxy.NewConn(conn, r, parser, readTimeout, writeTimeout)
-	pconn.Handle(globalCtx)
+		go handleConnection(conn, router, globalCtx, scfg.ReadTimeout, scfg.WriteTimeout)
+	}
 }
