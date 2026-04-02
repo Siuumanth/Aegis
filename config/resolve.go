@@ -34,13 +34,16 @@ type RuntimeConfig struct {
 
 // BuildRuntimeConfig converts raw YAML config → runtime maps
 func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
-	// redundant ig
 	if cfg.Aegis == nil {
 		cfg.Aegis = &Aegis{}
 	}
 
 	if cfg.Aegis.HotKeys == false {
 		cfg.HotKeys = nil
+	} else {
+		if cfg.HotKeys == nil {
+			cfg.HotKeys = &HotKeysConfig{}
+		}
 	}
 
 	rt := &RuntimeConfig{
@@ -52,9 +55,23 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 	mergeGlobal(rt.GlobalConfig)
 
 	for _, p := range cfg.Policies {
+		// if default hot key is true then set hot key policy as
+		// enabled
+		if cfg.Aegis != nil && cfg.Aegis.HotKeys == true {
+			//fmt.Println("T1")
+			if p.Config.HotKeys == nil || (p.Config.HotKeys != nil &&
+				!p.Config.HotKeys.Enabled) {
+				//	fmt.Println("T2S for ", p.Config)
+				// init a blank policy
+				p.Config.HotKeys = &HotKeyPolicy{Enabled: true}
+			}
+		}
 		mergeDefaults(cfg, &p.Config)
-
 		pc := p.Config
+		// if hot keys is enabled, create a default policy hk
+		if cfg.Aegis.HotKeys && pc.HotKeys == nil {
+			pc.HotKeys = &HotKeyPolicy{}
+		}
 
 		// normalize TTL bounds (only if ttl > 0)
 		if pc.TTL != nil && *pc.TTL > 0 {
@@ -68,6 +85,7 @@ func BuildRuntimeConfig(cfg *Config) *RuntimeConfig {
 			}
 		}
 
+		// final cleanup, kept at last for easier understanding
 		// check aegis features enabled or not and make it nil
 		if !cfg.Aegis.HotKeys || (pc.HotKeys != nil && !pc.HotKeys.Enabled) {
 			pc.HotKeys = nil

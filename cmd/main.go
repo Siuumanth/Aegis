@@ -25,7 +25,7 @@ import (
 */
 func main() {
 	// yaml parser
-	rawConfig, err := config.Load("aegis.yaml")
+	rawConfig, err := config.Load("test.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +63,7 @@ func main() {
 	// start server and for each connection, handle it
 
 	fmt.Println("Starting AEGIS TCP Server...")
+	return
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", ":6379")
 	if err != nil {

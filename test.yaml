@@ -18,7 +18,7 @@ policies:
     match:
       pattern: "forever:*"
     config:
-      ttl: 0s # Should NOT be overridden by your DefaultTTL (e.g. 10s)
+      ttl: 837s # Should NOT be overridden by your DefaultTTL (e.g. 10s)
       # All other fields are nil. Tests your fallback to DefaultMinTTL/MaxTTL
 
   # 4. EDGE CASE: Conflicting TTL Bounds
@@ -55,7 +55,7 @@ policies:
     config:
       ttl: 10s
       hot_key:
-        enabled: true
+        enabled: false
         ttl_multiplier: 1.5 # Tests your time.Duration(float64 * duration) logic
 
   # 8. EDGE CASE: Disabled Feature at Policy Level
