@@ -28,12 +28,12 @@ import (
 */
 func main() {
 	// Step 1: parse yaml
-	rawConfig, err := config.Load("test.yaml")
+	rawConfig, err := config.Load("aegis.yaml")
 	if err != nil {
 		panic(err)
 	}
 	cfg := config.BuildRuntimeConfig(rawConfig)
-	config.PrintRTConfig(cfg)
+	//	config.PrintRTConfig(cfg)
 	//  gloabl context to to pass around, specially for async workers
 	// graceful shutdown context
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -45,7 +45,7 @@ func main() {
 	router, hk, tag := buildRouter(cfg, rawConfig, globalCtx)
 
 	// start server and for each connection, handle it
-	fmt.Printf("AEGIS listening on %s:%d\n", rawConfig.Server.Host, rawConfig.Server.Port)
+	//	fmt.Printf("AEGIS listening on %s:%d\n", rawConfig.Server.Host, rawConfig.Server.Port)
 
 	// start server
 	if err := serve(rawConfig.Server, router, globalCtx); err != nil {
@@ -57,19 +57,25 @@ func main() {
 	// graceful shutdown, wait for all async workers to finish
 	if hk != nil {
 		hk.Stop()
-		hk.Wait()
 	}
 	if tag != nil {
 		tag.Stop()
+	}
+
+	if hk != nil {
+		hk.Wait()
+	}
+	if tag != nil {
 		tag.Wait()
 	}
+
 	// wait - waits till all async workers return
 	// stop - closes channel
 	fmt.Println("AEGIS TCP Server Stopped.")
 }
 
 // client = connection from app
-func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context, readTimeout, writeTimeout time.Duration) {
+func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context, readTimeout *time.Duration, writeTimeout *time.Duration) {
 	parser := resp.NewParser(conn)
 	// get new conn
 	pconn := proxy.NewConn(conn, r, parser, readTimeout, writeTimeout)
@@ -108,13 +114,19 @@ func serve(scfg *config.ServerConfig, router *proxy.Router, globalCtx context.Co
 	// main tcp listen cmd
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		panic(err)
+		panic("Init Error" + err.Error())
 	}
 	defer ln.Close()
 	fmt.Println("AEGIS is listening on PORT:", scfg.Port)
 
+	// close listener when context is cancelled, which unblocks Accept()
+	go func() {
+		<-globalCtx.Done()
+		ln.Close()
+	}()
+
 	for {
-		conn, err := ln.Accept()
+		conn, err := ln.Accept() // blocking
 		if err != nil {
 			select {
 			case <-globalCtx.Done():
@@ -125,6 +137,6 @@ func serve(scfg *config.ServerConfig, router *proxy.Router, globalCtx context.Co
 			}
 		}
 
-		go handleConnection(conn, router, globalCtx, scfg.ReadTimeout, scfg.WriteTimeout)
+		go handleConnection(conn, router, globalCtx, &scfg.ReadTimeout, &scfg.WriteTimeout)
 	}
 }

@@ -189,7 +189,6 @@ WaitGroup is a **join mechanism**, not a stop mechanism.
 ```
 
 ---
-
 # Worker Behavior Model
 
 Typical worker loop:
@@ -204,17 +203,13 @@ case job := <-ch:
 ```
 
 Behavior:
-
 - If processing → finishes current task
-    
 - On next iteration → sees `ctx.Done()` → exits
-    
 
 **Important:**  
 Shutdown is **cooperative, not forced**.
 
 ---
-
 # Why both Context and Channels are needed
 
 |Mechanism|Role|
@@ -223,113 +218,65 @@ Shutdown is **cooperative, not forced**.
 |Channel|Stops specific pipeline|
 
 Using only one leads to incomplete shutdown:
-
 - Only channel → background goroutines keep running
-    
 - Only context → workers may remain blocked on channels
-    
 
 ---
-
 # Design Principle
 
 > **Control plane (context) and data plane (channels) must remain separate.**
-
 ---
-
 # What you implemented (big picture)
-
 You built a system with:
-
 - Controlled concurrency (worker pools)
-    
 - Backpressure (bounded channels)
-    
 - Event-driven architecture
-    
 - Graceful shutdown semantics
-    
 
 This is **production-grade backend design**, not just Go code.
 
 ---
-
 # Beyond this project (important SDE insight)
 
 ## 1. Same pattern appears everywhere
-
 This shutdown model maps directly to:
-
 - HTTP servers → stop accepting connections, drain requests
-    
 - Kafka consumers → stop polling, commit offsets, exit
-    
 - Kubernetes pods → SIGTERM → grace period → termination
-    
 - Load balancers → stop routing → drain connections
-    
 - DB systems → stop writes → flush logs → shutdown
-    
-
 ---
-
 ## 2. Real-world extension
-
 In production systems, shutdown becomes:
-
 - **Draining**: finish in-flight work
-    
 - **Timeouts**: force exit if too slow
-    
 - **Idempotency**: ensure partial work doesn’t corrupt state
-    
-
 ---
-
 ## 3. Key engineering mindset
-
 Most developers focus on:
-
 ```text
 “How do I start this?”
 ```
 
 Strong engineers think:
-
 ```text
 “How does this behave under failure and shutdown?”
 ```
 
 ---
-
 ## 4. What this shows in interviews
-
 This design demonstrates:
-
 - Concurrency understanding
-    
 - System lifecycle thinking
-    
 - Clean separation of responsibilities
-    
 - Awareness of production concerns
-    
-
 ---
-
 # Final takeaway
-
 A well-designed system:
-
 - **does not panic on shutdown**
-    
 - **does not leak resources**
-    
 - **does not lose control of execution**
-    
-
 ---
-
 # One-line summary
 
 A robust backend system separates control (context), data flow (channels), and lifecycle (WaitGroup) to ensure safe, predictable shutdown under real-world conditions.

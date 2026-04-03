@@ -3,8 +3,8 @@ package proxy
 import (
 	"Aegis/internal/resp"
 	"context"
-	"fmt"
 	"io"
+	"log"
 	"net"
 	"time"
 )
@@ -18,13 +18,13 @@ type Conn struct {
 	writeTimeout time.Duration
 }
 
-func NewConn(conn net.Conn, router *Router, parser *resp.Parser, readTimeout, writeTimeout time.Duration) *Conn {
+func NewConn(conn net.Conn, router *Router, parser *resp.Parser, readTimeout *time.Duration, writeTimeout *time.Duration) *Conn {
 	return &Conn{
 		conn:         conn,
 		parser:       parser,
 		router:       router,
-		readTimeout:  readTimeout,
-		writeTimeout: writeTimeout,
+		readTimeout:  *readTimeout,
+		writeTimeout: *writeTimeout,
 	}
 }
 
@@ -47,6 +47,7 @@ func (c *Conn) Handle(globalCtx context.Context) {
 		_ = c.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
 
 		// 3. Parse request
+		// Here, the tcp connecotin is blocked until a command is received
 		cmd, err := c.parser.Parse()
 		if err != nil {
 			// client disconnected or read error, exit loop
@@ -57,14 +58,14 @@ func (c *Conn) Handle(globalCtx context.Context) {
 			}
 
 			// unexpected error
-			fmt.Printf("parse error: %v\n", err)
+			log.Printf("parse error: %v\n", err)
 			return
 		}
 
 		// 4. Route request with request context
 		if err := c.router.Route(ctx, cmd, c.conn); err != nil {
 			// if write fails → client likely gone
-			fmt.Printf("routing error: %v\n", err)
+			log.Printf("routing error: %v\n", err)
 
 			// optional: break instead of continue
 			return

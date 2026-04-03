@@ -78,6 +78,9 @@ func (p *Parser) readArray() ([]byte, []string, error) {
 	var raw []byte
 
 	// read first line e.g *3\r\n
+	// THIS IS THE MAIN BLOCKING POINT
+	// BLOCKS UNTILL SOME DATA COMES OVER THE CONNECTION AND IS READ
+	// ERROR IF EOF is Read
 	line, err := p.readLine()
 	if err != nil {
 		return nil, nil, err

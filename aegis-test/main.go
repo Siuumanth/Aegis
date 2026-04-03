@@ -15,8 +15,8 @@ import (
 
 // DEV SETTINGS
 const (
-	TEST_COUNT = 100 // Number of requests for benchmark
-	ADDR       = "localhost:6379"
+	TEST_COUNT = 10000 // Number of requests for benchmark
+	ADDR       = "localhost:6380"
 )
 
 func main() {
