@@ -15,15 +15,15 @@ import (
 
 // DEV SETTINGS
 const (
-	TEST_COUNT = 10000 // Number of requests for benchmark
-	ADDR       = "localhost:6380"
+	TEST_COUNT = 100 // Number of requests for benchmark
+	ADDR       = "localhost:6379"
 )
 
 func main() {
 	ctx := context.Background()
 
 	// mode := "load"
-	mode := "load"
+	mode := ""
 	// it for interactive
 
 	rdb := redis.NewClient(&redis.Options{

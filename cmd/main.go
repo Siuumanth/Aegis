@@ -101,7 +101,7 @@ func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx 
 	}
 
 	// build router components
-	h := handler.NewHandler(redisClient, hk, tag) // sf initialized internally
+	h := handler.NewHandler(redisClient, hk, tag, rawConfig.Redis.Address) // sf initialized internally
 	p := policy.NewEngine(cfg)
 
 	// 4. create the router

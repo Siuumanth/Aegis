@@ -56,6 +56,11 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	case "DEL":
 		return r.handler.Del(ctx, req)
 
+		// not wokring properly
+		// TODO: find some solution for pubsub
+	case "SUBSCRIBE", "PSUBSCRIBE":
+		return r.handler.PubSubTunnel(ctx, req)
+
 	default:
 		if strings.HasPrefix(strings.ToUpper(CMD), "AEGIS.") {
 			return r.RouteCustom(ctx, CMD, req)

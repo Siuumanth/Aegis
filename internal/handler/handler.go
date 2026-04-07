@@ -8,17 +8,19 @@ import (
 )
 
 type Handler struct {
-	hotkeys *hotkeys.HotKeyService
-	tags    *tags.TagService
-	redis   redis.Backend
-	sf      *sf.Group
+	hotkeys   *hotkeys.HotKeyService
+	tags      *tags.TagService
+	redis     redis.Backend
+	sf        *sf.Group
+	redisAddr string
 }
 
-func NewHandler(cli redis.Backend, hk *hotkeys.HotKeyService, t *tags.TagService) *Handler {
+func NewHandler(cli redis.Backend, hk *hotkeys.HotKeyService, t *tags.TagService, redisAddr string) *Handler {
 	return &Handler{
-		redis:   cli,
-		hotkeys: hk,
-		tags:    t,
-		sf:      &sf.Group{},
+		redis:     cli,
+		hotkeys:   hk,
+		tags:      t,
+		sf:        &sf.Group{},
+		redisAddr: redisAddr,
 	}
 }
