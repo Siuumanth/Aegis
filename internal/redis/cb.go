@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	goredis "github.com/redis/go-redis/v9"
 	gobreaker "github.com/sony/gobreaker/v2"
 
@@ -42,6 +43,9 @@ func NewCBBackend(inner Backend, cfg *config.RedisConfig) *CBBackend {
 func (c *CBBackend) exec(fn func() (any, error)) (any, error) {
 	result, err := c.breaker.Execute(fn)
 	if err != nil {
+		if err == redis.Nil {
+			return nil, redis.Nil // dont trip cb
+		}
 		if err == gobreaker.ErrOpenState || err == gobreaker.ErrTooManyRequests {
 			log.Printf("[CB] circuit open — rejecting request\n")
 		} else {

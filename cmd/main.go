@@ -28,6 +28,7 @@ import (
 7. start TCP listener → on each Accept() → NewConn(conn, router) → go conn.Handle()
 */
 // TODO: fix no patterns fallback
+// TODO: make redis.nil not nil in get , set cmds
 func main() {
 	// Step 1: parse yaml
 	rawConfig, err := config.Load("aegis.yaml")

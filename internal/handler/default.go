@@ -2,17 +2,21 @@ package handler
 
 import (
 	"Aegis/internal/resp"
-	"Aegis/internal/shared"
 	"context"
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func (h *Handler) DefaultHandler(ctx context.Context, req *Request) error {
 	result, err := h.redis.PassThrough(ctx, req.Cmd)
+	if err == redis.Nil {
+		return resp.WriteNull(req.Conn) // $-1
+	}
 	if err != nil {
-		return resp.WriteError(req.Conn, shared.ErrBackend)
+		return resp.WriteError(req.Conn, err)
 	}
 	// return result back
 	return resp.WriteAny(req.Conn, result)

@@ -13,7 +13,7 @@ const (
 
 // ===== Singleflight =====
 const (
-	DefaultSingleflightEnabled = false
+	DefaultSingleflightEnabled = true
 )
 
 // ===== Hot Key Defaults =====
