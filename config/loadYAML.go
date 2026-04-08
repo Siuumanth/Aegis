@@ -9,8 +9,13 @@ import (
 )
 
 func Load(f string) (*Config, error) {
+
 	data, err := os.ReadFile(f)
 	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("Config file: %s not found, switching to system defaults", f)
+			return &Config{}, nil
+		}
 		return nil, err
 	}
 	//	fmt.Println("Config file:", string(data))

@@ -27,6 +27,7 @@ import (
 6. build router
 7. start TCP listener → on each Accept() → NewConn(conn, router) → go conn.Handle()
 */
+// TODO: fix no patterns fallback
 func main() {
 	// Step 1: parse yaml
 	rawConfig, err := config.Load("aegis.yaml")
@@ -34,7 +35,8 @@ func main() {
 		panic(err)
 	}
 	cfg := config.BuildRuntimeConfig(rawConfig)
-	//	config.PrintRTConfig(cfg)
+	//config.PrintRTConfig(cfg)
+	//config.PrintConfig(rawConfig)
 	//  gloabl context to to pass around, specially for async workers
 	// graceful shutdown context
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)

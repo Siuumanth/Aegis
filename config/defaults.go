@@ -35,7 +35,7 @@ const (
 // ===== Redis Client and Server Defaults Defaults =====
 const (
 	DefaultServerHost         = "0.0.0.0"
-	DefaultServerPort         = 6379
+	DefaultServerPort         = 6380
 	DefaultServerReadTimeout  = 60 * time.Second
 	DefaultServerWriteTimeout = 5 * time.Second
 
