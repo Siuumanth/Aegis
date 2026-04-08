@@ -56,6 +56,10 @@ func (c *CBBackend) Ping(ctx context.Context) error {
 	_, err := c.exec(func() (any, error) {
 		return nil, c.inner.Ping(ctx)
 	})
+	if err != nil {
+		log.Printf("PING failed: \n")
+		return err
+	}
 	return err
 }
 

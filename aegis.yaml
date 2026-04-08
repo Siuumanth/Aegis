@@ -1,17 +1,17 @@
 server:
   host: "0.0.0.0"
-  port: 6379
+  port: 6380
   read_timeout: 60s
   write_timeout: 5s
   
 redis:
-  address: "localhost:6380"
+  address: "localhost:6379"
   pool_size: 100
   min_idle_conns: 10
   dial_timeout: 5s
   read_timeout: 3s
   write_timeout: 3s
-  max_retries: 2
+  max_retries: 1
 
 # pattern specific policies can be overridden from defaults
 defaults:

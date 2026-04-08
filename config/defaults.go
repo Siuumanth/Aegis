@@ -45,7 +45,7 @@ const (
 	DefaultRedisDialTimeout  = 5 * time.Second
 	DefaultRedisReadTimeout  = 3 * time.Second
 	DefaultRedisWriteTimeout = 3 * time.Second
-	DefaultRedisMaxRetries   = 2
+	DefaultRedisMaxRetries   = 1
 )
 
 // WP AND TAG PROCESS defaults

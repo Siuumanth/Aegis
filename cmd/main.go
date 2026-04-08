@@ -88,6 +88,7 @@ func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context,
 func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx context.Context) (*proxy.Router, *hotkeys.HotKeyService, *tags.TagService) {
 	// build dependencies
 	// 1. new redis backend client
+
 	redisCli := redis.NewClient(rawConfig.Redis)
 	// tihs is resolved during building runtime config
 	// build CB
@@ -97,7 +98,7 @@ func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx 
 	defer cancel()
 	// check if redis is up
 	if err := redisCBClient.Ping(ctx); err != nil {
-		log.Fatalf("Redis is down or unreachable: %v", err)
+		log.Fatalf("Redis is down or unreachable\nExiting...")
 	}
 
 	// 2. the handler needs the client to access redis

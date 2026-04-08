@@ -81,6 +81,8 @@ func (c *Client) Ping(ctx context.Context) error {
 }
 
 func NewClient(cfg *config.RedisConfig) *Client {
+	// set global internal logger to our silent version
+	goredis.SetLogger(&silentLogger{})
 	return &Client{
 		rdb: goredis.NewClient(&goredis.Options{
 			Addr:         cfg.Address,
@@ -93,6 +95,12 @@ func NewClient(cfg *config.RedisConfig) *Client {
 			Protocol:     2,
 		}),
 	}
+}
+
+type silentLogger struct{}
+
+func (s *silentLogger) Printf(ctx context.Context, format string, v ...interface{}) {
+	// do ntg
 }
 
 // pass raw bytes to redis
