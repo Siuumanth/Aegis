@@ -39,7 +39,7 @@ const (
 	DefaultServerReadTimeout  = 60 * time.Second
 	DefaultServerWriteTimeout = 5 * time.Second
 
-	DefaultRedisAddress      = "localhost:6379"
+	DefaultRedisAddress      = "redis:6379"
 	DefaultRedisPoolSize     = 10
 	DefaultRedisMinIdleConns = 2
 	DefaultRedisDialTimeout  = 5 * time.Second

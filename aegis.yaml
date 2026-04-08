@@ -5,7 +5,7 @@ server:
   write_timeout: 5s
   
 redis:
-  address: "localhost:6379"
+  address: "redis:6379"
   pool_size: 100
   min_idle_conns: 10
   dial_timeout: 5s

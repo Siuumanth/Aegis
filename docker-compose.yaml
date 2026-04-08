@@ -1,0 +1,20 @@
+# A minimal docker compose to spin up both aegis and redis
+# Recheck if the ports defined here match with the ones defined in your yaml
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-aegis
+    ports:
+      - "6379:6379"
+
+  aegis:
+    build: .
+    container_name: aegis
+    ports:
+      - "6380:6380"
+    volumes:
+    # copying local aegis.yaml to the container volume
+      - ./aegis.yaml:/app/aegis.yaml
+    depends_on:
+      - redis
