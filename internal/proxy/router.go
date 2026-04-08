@@ -57,7 +57,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		return r.handler.Del(ctx, req)
 
 		// not wokring properly
-		// TODO: find some solution for pubsub
+		// BIG TODO: find some solution for bidirectional stuff like pubsub
 	case "SUBSCRIBE", "PSUBSCRIBE":
 		return r.handler.PubSubTunnel(ctx, req)
 

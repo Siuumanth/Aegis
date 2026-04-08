@@ -11,6 +11,7 @@ import (
 	"Aegis/internal/tags"
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -85,13 +86,22 @@ func handleConnection(conn net.Conn, r *proxy.Router, globalCtx context.Context,
 func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx context.Context) (*proxy.Router, *hotkeys.HotKeyService, *tags.TagService) {
 	// build dependencies
 	// 1. new redis backend client
-	redisClient := redis.NewClient(rawConfig.Redis)
+	redisCli := redis.NewClient(rawConfig.Redis)
 	// tihs is resolved during building runtime config
+	// build CB
+	redisCBClient := redis.NewCBBackend(redisCli, rawConfig.Redis)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	// check if redis is up
+	if err := redisCBClient.Ping(ctx); err != nil {
+		log.Fatalf("Redis is down or unreachable: %v", err)
+	}
 
 	// 2. the handler needs the client to access redis
 	// 3. the router needs the policy engine and handler
-	hk := hotkeys.NewHotKeyService(cfg.GlobalConfig, redisClient, config.DefaultHotKeyBufSize)
-	tag := tags.NewTagService(cfg.GlobalConfig, redisClient, config.DefaultTagBufSize)
+	hk := hotkeys.NewHotKeyService(cfg.GlobalConfig, redisCBClient, config.DefaultHotKeyBufSize)
+	tag := tags.NewTagService(cfg.GlobalConfig, redisCBClient, config.DefaultTagBufSize)
 	// init tags and hot keys
 	if hk != nil {
 		hk.Init(globalCtx, config.DefaultHotKeyWorkers)
@@ -101,7 +111,7 @@ func buildRouter(cfg *config.RuntimeConfig, rawConfig *config.Config, globalCtx 
 	}
 
 	// build router components
-	h := handler.NewHandler(redisClient, hk, tag, rawConfig.Redis.Address) // sf initialized internally
+	h := handler.NewHandler(redisCBClient, hk, tag, rawConfig.Redis.Address) // sf initialized internally
 	p := policy.NewEngine(cfg)
 
 	// 4. create the router

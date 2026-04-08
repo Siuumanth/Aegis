@@ -57,7 +57,12 @@ func (c *Conn) Handle(globalCtx context.Context) {
 				return
 			}
 
-			// unexpected error
+			// to handle client disconnection silently
+			_, ok := err.(net.Error)
+			if ok {
+				return
+			}
+
 			log.Printf("parse error: %v\n", err)
 			return
 		}

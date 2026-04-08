@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/redis/go-redis/v9 v9.18.0
+	github.com/sony/gobreaker/v2 v2.4.0
 	golang.org/x/sync v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )

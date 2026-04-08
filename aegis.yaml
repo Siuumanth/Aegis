@@ -14,9 +14,9 @@ redis:
   max_retries: 2
 
 # pattern specific policies can be overridden from defaults
-# defaults:
-#   ttl: 10s
-#   min_ttl: 5s
+defaults:
+  ttl: 10s
+  min_ttl: 5s
 
 # GLobal kill switch
 aegis:

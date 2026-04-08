@@ -68,10 +68,16 @@ type Backend interface {
 
 	// Pipe
 	StartPipeline(ctx context.Context) goredis.Pipeliner
+
+	Ping(ctx context.Context) error
 }
 
 type Client struct {
 	rdb *goredis.Client
+}
+
+func (c *Client) Ping(ctx context.Context) error {
+	return c.rdb.Ping(ctx).Err()
 }
 
 func NewClient(cfg *config.RedisConfig) *Client {
