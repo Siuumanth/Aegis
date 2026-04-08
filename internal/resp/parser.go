@@ -20,7 +20,22 @@ func NewParser(r io.Reader) *Parser {
 // Parse reads one RESP2 command from the connection
 func (p *Parser) Parse() (*Command, error) {
 	// read raw bytes for passthrough
-	raw, args, err := p.readArray()
+	line, err := p.peekLine()
+	if err != nil {
+		return nil, err
+	}
+
+	var raw []byte
+	var args []string
+
+	// chooose inline or resp parser
+
+	if len(line) > 0 && line[0] == '*' {
+		raw, args, err = p.readArray()
+	} else {
+		raw, args, err = p.readInline()
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +59,32 @@ func (p *Parser) Parse() (*Command, error) {
 	//	PrintCommand(cmd, os.Stdout)
 
 	return cmd, nil
+}
+
+// peeking line for inline
+func (p *Parser) peekLine() ([]byte, error) {
+	line, err := p.reader.Peek(1)
+	if err != nil {
+		return nil, err
+	}
+	return line, nil
+}
+
+// inline support
+func (p *Parser) readInline() ([]byte, []string, error) {
+	line, err := p.readLine()
+	if err != nil {
+		return nil, nil, err
+	}
+	raw := append([]byte{}, line...)
+	// remove \r\n
+	str := strings.TrimSpace(string(line))
+	if str == "" {
+		return nil, nil, fmt.Errorf("empty inline command")
+	}
+
+	parts := strings.Split(str, " ")
+	return raw, parts, nil
 }
 
 // PrintCommand prints a command in Redis syntax
