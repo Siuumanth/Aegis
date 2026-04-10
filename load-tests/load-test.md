@@ -197,3 +197,91 @@ Summary:
 
 
 
+
+
+--------------------------
+
+NEW TESTS: After changing resp writer stuff to buffer and conn.Write
+eg:
+```go
+func WriteInteger(conn net.Conn, val int64) error {
+    buf := make([]byte, 0, 32)
+    buf = append(buf, ':')
+    buf = strconv.AppendInt(buf, val, 10)
+    buf = append(buf, '\r', '\n')
+
+    _, err := conn.Write(buf)
+    return err
+}
+
+n defaults are 
+DefaultHotKeyWorkers = 8
+DefaultHotKeyBufSize = 5000
+```
+
+Summary:
+  throughput summary: 32051.28 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        2.486     0.536     2.223     4.695     6.575    20.095
+
+Summary:
+  throughput summary: 20283.98 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.852     0.696     3.479     6.975     9.151    12.999
+        
+Summary:
+  throughput summary: 17006.80 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.778     0.608     4.287     8.759    13.663    20.607
+
+Summary:
+  throughput summary: 20833.33 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.871     0.528     3.351     7.527    11.591    27.855
+
+
+Summary:
+  throughput summary: 21645.02 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.762     0.728     3.407     6.959     9.127    11.623
+
+Summary:
+  throughput summary: 20161.29 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.019     0.696     3.575     7.391    10.887    20.239
+
+Summary:
+  throughput summary: 21598.27 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.767     0.816     3.175     8.223    13.279    21.311
+
+
+---
+
+Reverting to normal parsing:
+
+
+Summary:
+  throughput summary: 22883.29 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.529     0.536     3.191     6.927     9.143    17.487
+        
+Summary:
+  throughput summary: 23310.02 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.441     0.504     3.135     5.983     7.919    12.143
+
+Summary:
+  throughput summary: 23148.15 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.365     0.776     3.007     6.327     8.167    14.759

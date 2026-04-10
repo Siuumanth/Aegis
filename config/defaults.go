@@ -53,5 +53,5 @@ const (
 	DefaultTagWorkers    = 8
 	DefaultTagBufSize    = 5000
 	DefaultHotKeyWorkers = 8
-	DefaultHotKeyBufSize = 5000
+	DefaultHotKeyBufSize = 10000
 )
