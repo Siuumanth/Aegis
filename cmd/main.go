@@ -31,13 +31,13 @@ import (
 // TODO: make redis.nil not nil in get , set cmds
 func main() {
 	// Step 1: parse yaml
-	rawConfig, err := config.Load("blank.yaml")
+	rawConfig, err := config.Load("aegis.yaml")
 	if err != nil {
 		panic(err)
 	}
+	//config.PrintConfig(rawConfig)
 	cfg := config.BuildRuntimeConfig(rawConfig)
 	//config.PrintRTConfig(cfg)
-	//config.PrintConfig(rawConfig)
 	//  gloabl context to to pass around, specially for async workers
 	// graceful shutdown context
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)

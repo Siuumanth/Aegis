@@ -5,6 +5,7 @@ import (
 	"net"
 )
 
+// TODO: instead of Fprintf, use conn.Write for faster allocations
 // WriteString writes a RESP bulk string response
 func WriteString(conn net.Conn, val string) error {
 	_, err := fmt.Fprintf(conn, "$%d\r\n%s\r\n", len(val), val)

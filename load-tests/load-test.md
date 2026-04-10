@@ -176,6 +176,17 @@ Summary:
         3.599     0.840     3.103     6.927    11.607    17.231
 
 
+All features false:
+Aegis
+Summary:
+  throughput summary: 27397.26 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        2.863     0.632     2.591     4.775     9.719    14.279
+
+
+
+
 
 Pure redis for benchmark:
 Summary:
@@ -183,3 +194,6 @@ Summary:
   latency summary (msec):
           avg       min       p50       p95       p99       max
         1.226     0.328     1.127     1.711     2.487     4.759
+
+
+
