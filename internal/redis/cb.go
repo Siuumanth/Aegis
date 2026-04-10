@@ -23,11 +23,11 @@ type CBBackend struct {
 func NewCBBackend(inner Backend, cfg *config.RedisConfig) *CBBackend {
 	settings := gobreaker.Settings{
 		Name:        "redis",
-		MaxRequests: 3,
-		Interval:    60 * time.Second,
+		MaxRequests: 12,
+		Interval:    10 * time.Second,
 		Timeout:     4 * time.Second,
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
-			return counts.ConsecutiveFailures > 5
+			return counts.ConsecutiveFailures > 10
 		},
 		OnStateChange: func(name string, from, to gobreaker.State) {
 			log.Printf("[CB] state change: %s → %s\n", from.String(), to.String())
@@ -41,18 +41,27 @@ func NewCBBackend(inner Backend, cfg *config.RedisConfig) *CBBackend {
 
 // global fucnton executor
 func (c *CBBackend) exec(fn func() (any, error)) (any, error) {
-	result, err := c.breaker.Execute(fn)
-	if err != nil {
-		if err == redis.Nil {
-			return nil, redis.Nil // dont trip cb
+	var originalErr error
+	// originalErr captures what actually happened, CB only sees conn errors. caller gets the real error back.
+	result, cbErr := c.breaker.Execute(func() (any, error) {
+		r, e := fn()
+		originalErr = e
+		if isRedisConnError(e) {
+			return r, e // counts as CB failure
 		}
-		if err == gobreaker.ErrOpenState || err == gobreaker.ErrTooManyRequests {
-			log.Printf("[CB] circuit open — rejecting request\n")
-		} else {
-			log.Printf("[CB] redis error: %v\n", err)
-		}
-		return nil, err
+		return r, nil // don't trip CB
+	})
+
+	if cbErr == gobreaker.ErrOpenState || cbErr == gobreaker.ErrTooManyRequests {
+		log.Println("[CB] circuit open — rejecting request")
+		return nil, cbErr
 	}
+
+	// return original error to caller, not cbErr
+	if originalErr != nil {
+		return result, originalErr
+	}
+
 	return result, nil
 }
 
@@ -120,6 +129,11 @@ func (c *CBBackend) PassThrough(ctx context.Context, cmd *resp.Command) (any, er
 		return c.inner.PassThrough(ctx, cmd)
 	})
 	if err != nil {
+		// ignore redis.Nil
+		// maybe edge case
+		if err == redis.Nil {
+			return result, nil
+		}
 		log.Printf("[CB] PassThrough %s failed: %v\n", cmd.Name, err)
 		return nil, err
 	}

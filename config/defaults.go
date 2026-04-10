@@ -39,7 +39,7 @@ const (
 	DefaultServerReadTimeout  = 60 * time.Second
 	DefaultServerWriteTimeout = 5 * time.Second
 
-	DefaultRedisAddress      = "redis:6379"
+	DefaultRedisAddress      = "localhost:6379"
 	DefaultRedisPoolSize     = 10
 	DefaultRedisMinIdleConns = 2
 	DefaultRedisDialTimeout  = 5 * time.Second
@@ -50,8 +50,8 @@ const (
 
 // WP AND TAG PROCESS defaults
 const (
-	DefaultTagWorkers    = 4
-	DefaultTagBufSize    = 1000
-	DefaultHotKeyWorkers = 4
-	DefaultHotKeyBufSize = 1000
+	DefaultTagWorkers    = 8
+	DefaultTagBufSize    = 5000
+	DefaultHotKeyWorkers = 8
+	DefaultHotKeyBufSize = 5000
 )

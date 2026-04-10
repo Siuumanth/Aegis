@@ -43,8 +43,9 @@ type TagService struct {
 	wg           sync.WaitGroup
 }
 
-func NewTagService(cfg *config.GlobalConfig, redisClient redis.Backend, bufSize int) *TagService {
-	if !cfg.Aegis.Tags {
+func NewTagService(global *config.GlobalConfig, redisClient redis.Backend, bufSize int) *TagService {
+	if !global.Aegis.Tags {
+		//	fmt.Println("tags not init")
 		return nil
 	}
 	return &TagService{

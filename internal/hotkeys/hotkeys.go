@@ -4,6 +4,7 @@ import (
 	"Aegis/config"
 	"Aegis/internal/redis"
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -66,6 +67,7 @@ type HotKeyService struct {
 func NewHotKeyService(global *config.GlobalConfig, redisClient redis.Backend, bufSize int) *HotKeyService {
 	// if global is disabled then return
 	if global.HotKeys == nil || !global.Aegis.HotKeys {
+		fmt.Println("hk not init")
 		return nil
 	}
 	return &HotKeyService{

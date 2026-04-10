@@ -31,7 +31,7 @@ import (
 // TODO: make redis.nil not nil in get , set cmds
 func main() {
 	// Step 1: parse yaml
-	rawConfig, err := config.Load("aegis.yaml")
+	rawConfig, err := config.Load("blank.yaml")
 	if err != nil {
 		panic(err)
 	}

@@ -25,7 +25,7 @@ func main() {
 
 	// Mode options: "it", "load", "compare", or "" (default)
 	//	mode := "compare"
-	mode := "tp"
+	mode := "it"
 
 	rdbAegis := redis.NewClient(&redis.Options{
 		Addr:         AEGIS_ADDR,
