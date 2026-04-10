@@ -36,9 +36,9 @@ func (h *Handler) Get(ctx context.Context, req *Request) error {
 
 	if err != nil {
 		if err == shared.ErrGoRedisNil {
-			return resp.WriteNull(req.Conn)
+			return resp.WriteNull(req.Writer)
 		}
-		return resp.WriteError(req.Conn, shared.ErrBackend)
+		return resp.WriteError(req.Writer, shared.ErrBackend)
 	}
 
 	// track hot key async, nil safe
@@ -47,5 +47,5 @@ func (h *Handler) Get(ctx context.Context, req *Request) error {
 	}
 
 	// 2. Send response
-	return resp.WriteString(req.Conn, val)
+	return resp.WriteString(req.Writer, val)
 }

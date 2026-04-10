@@ -285,3 +285,33 @@ Summary:
   latency summary (msec):
           avg       min       p50       p95       p99       max
         3.365     0.776     3.007     6.327     8.167    14.759
+
+---
+
+
+after replacing conn with bufio Writier 
+
+Summary:
+  throughput summary: 22935.78 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        3.505     0.688     3.047     7.015    10.887    17.375
+
+Summary:
+  throughput summary: 17094.02 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.786     0.552     4.199     8.991    16.863    23.583
+
+Summary:
+  throughput summary: 18939.39 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.169     0.568     3.719     8.239    10.791    16.975
+
+
+
+-
+
+
+FINAL TEST: BLank proxy

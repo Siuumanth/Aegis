@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"Aegis/internal/resp"
+	"bufio"
 	"context"
 	"io"
 	"log"
@@ -30,6 +31,8 @@ func NewConn(conn net.Conn, router *Router, parser *resp.Parser, readTimeout *ti
 
 // Handle reads commands in a loop until client disconnects
 func (c *Conn) Handle(globalCtx context.Context) {
+	// new writer instead of conn
+	bw := bufio.NewWriter(c.conn)
 	ctx, cancel := context.WithCancel(globalCtx)
 	defer cancel()
 	defer c.conn.Close()
@@ -68,11 +71,14 @@ func (c *Conn) Handle(globalCtx context.Context) {
 		}
 
 		// 4. Route request with request context
-		if err := c.router.Route(ctx, cmd, c.conn); err != nil {
+		if err := c.router.Route(ctx, cmd, bw); err != nil {
 			// if write fails → client likely gone
 			log.Printf("routing error: %v\n", err)
 
 			// optional: break instead of continue
+			return
+		}
+		if err := bw.Flush(); err != nil {
 			return
 		}
 	}

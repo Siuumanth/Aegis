@@ -10,7 +10,7 @@ func (h *Handler) Del(ctx context.Context, req *Request) error {
 
 	// 1. delete key from Redis
 	if err := h.redis.Del(ctx, req.Cmd.Key); err != nil {
-		return resp.WriteError(req.Conn, shared.ErrBackend)
+		return resp.WriteError(req.Writer, shared.ErrBackend)
 	}
 
 	// 2. async tag cleanup
@@ -24,5 +24,5 @@ func (h *Handler) Del(ctx context.Context, req *Request) error {
 	}
 
 	// 4. RESP OK
-	return resp.WriteOK(req.Conn)
+	return resp.WriteOK(req.Writer)
 }

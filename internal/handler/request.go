@@ -3,11 +3,11 @@ package handler
 import (
 	"Aegis/config"
 	"Aegis/internal/resp"
-	"net"
+	"io"
 )
 
 type Request struct {
 	Cmd    *resp.Command
 	Policy *config.PolicyConfig // nil if no match
-	Conn   net.Conn
+	Writer io.Writer
 }

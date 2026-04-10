@@ -32,7 +32,7 @@ func (h *Handler) Set(ctx context.Context, req *Request) error {
 
 	value := req.Cmd.Args[0] // value being set
 	if err := h.redis.Set(ctx, req.Cmd.Key, value, ttl); err != nil {
-		return resp.WriteError(req.Conn, shared.ErrBackend)
+		return resp.WriteError(req.Writer, shared.ErrBackend)
 	}
 	args := req.Cmd.Args[1:] // passing only modifiers
 	// register tags async, nil safe
@@ -40,7 +40,7 @@ func (h *Handler) Set(ctx context.Context, req *Request) error {
 		h.tags.Register(req.Cmd.Key, req.Policy.Tags, args)
 	}
 
-	return resp.WriteOK(req.Conn)
+	return resp.WriteOK(req.Writer)
 }
 
 // tihs func  scans args for EX or PX and returns th time

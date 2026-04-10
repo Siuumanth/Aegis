@@ -17,7 +17,7 @@ func (h *Handler) Invalidate(ctx context.Context, req *Request) error {
 	tags = append(tags, req.Cmd.Args...)
 
 	if len(tags) == 0 {
-		return resp.WriteError(req.Conn, shared.ErrInvalidCommand)
+		return resp.WriteError(req.Writer, shared.ErrInvalidCommand)
 	}
 
 	var totalDeleted int64
@@ -35,5 +35,5 @@ func (h *Handler) Invalidate(ctx context.Context, req *Request) error {
 	}
 
 	// 3. Return the total sum of keys deleted across all tags
-	return resp.WriteInteger(req.Conn, totalDeleted)
+	return resp.WriteInteger(req.Writer, totalDeleted)
 }

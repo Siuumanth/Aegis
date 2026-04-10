@@ -7,7 +7,7 @@ import (
 	"Aegis/internal/resp"
 	"Aegis/internal/shared"
 	"context"
-	"net"
+	"io"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ func NewRouter(cfg *config.RuntimeConfig, h *handler.Handler, p *policy.Engine) 
 }
 
 // match policy, route based on cmd
-func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) error {
+func (r *Router) Route(ctx context.Context, cmd *resp.Command, w io.Writer) error {
 
 	// 1. match policy
 	match := r.policy.Match(cmd)
@@ -37,7 +37,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	req := &handler.Request{
 		Cmd:    cmd,
 		Policy: match,
-		Conn:   conn,
+		Writer: w,
 	}
 	// request is all  the downstream processes need to know to match
 	// 2. routing decision based on cmd
@@ -48,18 +48,18 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 	case "SET":
 		return r.handler.Set(ctx, req)
 	case "HELLO":
-		conn.Write([]byte("*2\r\n$6\r\nserver\r\n$5\r\nredis\r\n"))
+		resp.WriteAny(w, []any{"server", "redis"})
 		return nil
 	case "CLIENT":
-		conn.Write([]byte("+OK\r\n"))
+		resp.WriteOK(w)
 		return nil
 	case "DEL":
 		return r.handler.Del(ctx, req)
 
 		// not wokring properly
 		// BIG TODO: find some solution for bidirectional stuff like pubsub
-	case "SUBSCRIBE", "PSUBSCRIBE":
-		return r.handler.PubSubTunnel(ctx, req)
+	// case "SUBSCRIBE", "PSUBSCRIBE":
+	// 	return r.handler.PubSubTunnel(ctx, req)
 
 	default:
 		if strings.HasPrefix(strings.ToUpper(CMD), "AEGIS.") {
@@ -67,7 +67,7 @@ func (r *Router) Route(ctx context.Context, cmd *resp.Command, conn net.Conn) er
 		}
 		err := r.handler.DefaultHandler(ctx, req)
 		if err != nil {
-			return resp.WriteError(conn, shared.ErrBackend)
+			return resp.WriteError(w, shared.ErrBackend)
 		}
 	}
 	return nil
@@ -78,6 +78,6 @@ func (r *Router) RouteCustom(ctx context.Context, cmd string, req *handler.Reque
 	case "AEGIS.INVALIDATE":
 		return r.handler.Invalidate(ctx, req)
 	default:
-		return resp.WriteError(req.Conn, shared.ErrInvalidCommand)
+		return resp.WriteError(req.Writer, shared.ErrInvalidCommand)
 	}
 }
