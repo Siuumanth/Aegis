@@ -285,3 +285,29 @@ Summary:
   latency summary (msec):
           avg       min       p50       p95       p99       max
         3.365     0.776     3.007     6.327     8.167    14.759
+
+
+
+
+
+------------------------------------------------
+
+BLANK PROXY
+
+Summary:
+  throughput summary: 20161.29 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.294     0.952     3.927     7.615    11.879    20.655
+        
+    Summary:
+  throughput summary: 16891.89 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        5.227     0.784     4.735     9.759    12.767    20.783
+
+Summary:
+  throughput summary: 18115.94 requests per second
+  latency summary (msec):
+          avg       min       p50       p95       p99       max
+        4.871     0.648     4.455     8.879    13.079    20.319
