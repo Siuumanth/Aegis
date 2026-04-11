@@ -54,4 +54,5 @@ const (
 	DefaultTagBufSize    = 5000
 	DefaultHotKeyWorkers = 8
 	DefaultHotKeyBufSize = 10000
+	DefaultBufSize       = 10000 // default buffer size
 )
