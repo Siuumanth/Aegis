@@ -28,7 +28,6 @@ hot_keys:
   max_tracked: 10000        # system wide memory cap
   cleanup_interval: 10s     # how often stale hot key records are checked
 # Optional ,overridable features
-
   stale_after: 1m           # if a hot key has not been increased in this long, it is considered stale
   min_extend_interval: 30s  # don't re-extend more than once per tis time perio
   window: 2s
@@ -49,7 +48,6 @@ policies:
         window: 2s
         threshold: 100
         ttl_multiplier: 3
-     
 
   - name: "feed-cache"
     match:

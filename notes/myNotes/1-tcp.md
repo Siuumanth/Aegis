@@ -9,7 +9,6 @@ TCP = reliable byte stream between client and server
 No structure, just bytes flowing.
 
 ---
-
 ### Server setup
 
 ```go

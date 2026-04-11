@@ -87,6 +87,7 @@ defaults:
 ### Fields
 - **ttl**  
     Default time-to-live applied to keys.
+    0 TTL means no limits
 - **min_ttl** , max_ttl
     Minimum and Maximum allowed TTL to prevent excessively short-lived entries.
 ### Notes
@@ -106,26 +107,16 @@ aegis:
 ```
 
 ### Fields
-
 - **tags**  
     Enables tag-based invalidation globally.
-    
 - **hot_keys**  
     Enables hot key detection and adaptive TTL logic.
-    
 - **singleflight**  
     Enables request coalescing to deduplicate concurrent requests.
-    
-
 ### Notes
-
 - Acts as a **global kill switch layer**.
-    
 - If a feature is disabled here, it is ignored even if enabled in policies.
-    
-
 ---
-
 ## **5. Hot Key System Configuration**
 
 Defines system-wide constraints and behavior for hot key tracking.
@@ -134,48 +125,33 @@ Defines system-wide constraints and behavior for hot key tracking.
 hot_keys:
   max_tracked: 10000
   cleanup_interval: 10s
+  # overridable defaults
   stale_after: 1m
   min_extend_interval: 30s
   window: 2s
   threshold: 200
   ttl_multiplier: 200
 ```
-
 ### Fields
-
 - **max_tracked**  
     Maximum number of keys tracked globally (memory bound).
-    
 - **cleanup_interval**  
     Frequency of background cleanup for stale entries.
-    
 - **stale_after**  
     Duration after which an inactive key is considered stale.
-    
 - **min_extend_interval**  
     Minimum time between consecutive TTL extensions.
-    
 - **window**  
     Time window used for request rate measurement.
-    
 - **threshold**  
     Request count within the window required to classify a key as hot.
-    
 - **ttl_multiplier**  
     Factor by which TTL is extended for hot keys.
-    
-
 ### Notes
-
 - These act as **global defaults** for hot key behavior.
-    
 - Can be overridden at the policy level when enabled.
-    
 - Designed to prevent excessive memory usage and uncontrolled TTL growth.
-    
-
 ---
-
 ### **Default Behavior**
 - If no policy matches a key, Aegis falls back to **default configuration safely and deterministically**.
 - By default:
@@ -184,6 +160,5 @@ hot_keys:
     - **tag-based invalidation is disabled**
 
 This ensures minimal overhead while still preventing duplicate backend requests.
-
 
 ---
