@@ -105,19 +105,19 @@ Aegis sustains ~65–75% of native Redis throughput in Docker, with overhead dom
 
 ---
 
-### Benchmark Results (docker + WSL):
+### Benchmark Results, from multiple runs:
 Scenario:  `redis-benchmark -t get,set,del -n 10000 -p 6380 -c 100`
 
 | Test Scenario                     | Description          | Throughput (RPS) | p50 Latency | p99 Latency |
 | --------------------------------- | -------------------- | ---------------- | ----------- | ----------- |
-| **Baseline (Redis)**              | Direct connection    | **42,700**       | 1.26 ms     | 2.63 ms     |
-| **Aegis (Standard Run)**          | All features enabled | **26,900**       | 2.51 ms     | 9.40 ms     |
-| **Aegis (Features Disabled)**     | All features off     | **27,400**       | 2.4 ms      | 9.10ms      |
+| **Baseline (Redis)**              | Direct connection    | **42,700**       | 1.26 ms     | 3.1 ms      |
+| **Aegis (Standard Run)**          | All features enabled | **26,900**       | 2.50 ms     | 9.30 ms     |
+| **Aegis (Features Disabled)**     | All features off     | **27,200**       | 2.4 ms      | 9.10ms      |
 | **Aegis (Hotkeys Enabled Only)**  | Hotkeys on, tags off | **26,750**       | 2.70 ms     | 13.8 ms     |
 | **Aegis (Higher Contention Run)** | Higher latency run   | **22,700**       | 2.95 ms     | 12.06 ms    |
 | **Aegis (Alternate Stable Run)**  | Another stable run   | **27,000**       | 2.54 ms     | 11.07 ms    |
-| **RESP Writer Optimisation**      | Manual byte write    | **29,050**       | 2.35 ms     | 8.20 ms     |
-| **Blank Proxy (Control)**         | Raw TCP forward      | **30,160**       | 2.32 ms     | 8.90ms      |
+| **RESP Writer Optimisation**      | Manual byte write    | **28,050**       | 2.45 ms     | 9.00 ms     |
+| **Blank Proxy (Control)**         | Raw TCP forward      | **29,560**       | 2.37 ms     | 8.80ms      |
 
 
 ---

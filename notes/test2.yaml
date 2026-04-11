@@ -1,0 +1,72 @@
+server:
+  host: "0.0.0.0"
+  port: 6380
+  read_timeout: 60s
+  write_timeout: 5s
+  
+redis:
+  address: "redis:6379"
+  pool_size: 100
+  min_idle_conns: 10
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  max_retries: 1
+
+# pattern specific policies can be overridden from defaults
+defaults:
+  ttl: 10s
+  min_ttl: 5s
+
+# GLobal kill switch
+aegis:
+  tags: false
+  hot_keys: true
+  singleflight: true
+
+hot_keys:
+  max_tracked: 10000        # system wide memory cap
+  cleanup_interval: 10s     # how often stale hot key records are checked
+# Optional ,overridable features
+  stale_after: 1m           # if a hot key has not been increased in this long, it is considered stale
+  min_extend_interval: 30s  # don't re-extend more than once per tis time perio
+  window: 2s
+  threshold: 200
+  ttl_multiplier: 200  # above 3 fields are overridable
+
+policies:
+  - name: "user-profiles"
+    match:
+      pattern: "user:*"
+    config:
+      ttl: 60s
+      max_ttl: 10m
+      singleflight: true
+      tags: [users,profile]
+      hot_key:
+        enabled: true
+        window: 2s
+        threshold: 100
+        ttl_multiplier: 3
+
+  - name: "feed-cache"
+    match:
+      pattern: "feed:*"
+    config:
+      ttl: 15s
+      singleflight: true
+      tags: [feed]
+      hot_key:
+        enabled: true
+        window: 1s
+        threshold: 500
+        ttl_multiplier: 2
+
+  - name: "session-keys"
+    match:
+      pattern: "session:*"
+    config:
+      ttl: 30m
+      singleflight: false
+      hot_key:
+        enabled: false

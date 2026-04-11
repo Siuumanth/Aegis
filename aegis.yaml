@@ -1,3 +1,4 @@
+
 server:
   host: "0.0.0.0"
   port: 6380
@@ -13,60 +14,106 @@ redis:
   write_timeout: 3s
   max_retries: 1
 
-# pattern specific policies can be overridden from defaults
-defaults:
-  ttl: 10s
-  min_ttl: 5s
-
-# GLobal kill switch
+# global feature toggles
 aegis:
-  tags: false
+  tags: true
   hot_keys: true
   singleflight: true
 
+# default caching behavior
+defaults:
+  ttl: 10s        # default ttl for all
+  min_ttl: 5s
+
+# global hot key system limits
 hot_keys:
-  max_tracked: 10000        # system wide memory cap
-  cleanup_interval: 10s     # how often stale hot key records are checked
-# Optional ,overridable features
-  stale_after: 1m           # if a hot key has not been increased in this long, it is considered stale
-  min_extend_interval: 30s  # don't re-extend more than once per tis time perio
+  max_tracked: 10000     # max keys tracked in memory
+  cleanup_interval: 10s  # stale key cleanup
+  # optional defaults
+  stale_after: 1m
   window: 2s
-  threshold: 200
-  ttl_multiplier: 200  # above 3 fields are overridable
 
+# policy-driven caching rules
 policies:
-  - name: "user-profiles"
+  # read-heavy user metadata
+  - name: "user-profile"
     match:
-      pattern: "user:*"
+      pattern: "user:*"          # matches keys
     config:
-      ttl: 60s
-      max_ttl: 10m
-      singleflight: true
-      tags: [users,profile]
+      ttl: 60s                   # base ttl
+      max_ttl: 10m               # cap on extension
+      singleflight: true         # dedupe concurrent requests
+      tags: ["user", "profile"]  # for grouped invalidation
       hot_key:
-        enabled: true
-        window: 2s
-        threshold: 100
-        ttl_multiplier: 3
+        enabled: true            
+        window: 2s                # observation window
+        threshold: 100            # hits to mark hot
+        ttl_multiplier: 3         # ttl boost factor
+        stale_after: 1m           # drop if inactive
+        min_extend_interval: 30s  # extension cooldown
 
-  - name: "feed-cache"
+  # feed - high read frequency
+  - name: "feed"
     match:
       pattern: "feed:*"
     config:
       ttl: 15s
       singleflight: true
-      tags: [feed]
+      tags: ["feed"]
+
+      # aggressive hot key detection for burst traffic
       hot_key:
         enabled: true
         window: 1s
-        threshold: 500
+        threshold: 300
         ttl_multiplier: 2
+        stale_after: 30s
+        min_extend_interval: 15s
 
-  - name: "session-keys"
+  # session data (write-heavy, should not be cached aggressively)
+  - name: "session"
     match:
       pattern: "session:*"
     config:
       ttl: 30m
       singleflight: false
+
+      # disable hot key logic for session keys
       hot_key:
         enabled: false
+
+  # product catalog (read-heavy, relatively stable)
+  - name: "product-catalog"
+    match:
+      pattern: "product:*"
+    config:
+      ttl: 5m
+      max_ttl: 30m
+      singleflight: true
+      tags: ["product"]
+
+      # moderate hot key handling
+      hot_key:
+        enabled: true
+        window: 3s
+        threshold: 80
+        ttl_multiplier: 2.5
+        stale_after: 2m
+        min_extend_interval: 45s
+
+  # search results (high churn, avoid long caching)
+  - name: "search"
+    match:
+      pattern: "search:*"
+    config:
+      ttl: 10s
+      singleflight: true
+
+      # detect bursts but avoid long extensions
+      hot_key:
+        enabled: true
+        window: 1s
+        threshold: 200
+        ttl_multiplier: 1.5
+        stale_after: 20s
+        min_extend_interval: 10s
