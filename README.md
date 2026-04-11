@@ -125,7 +125,73 @@ services:
 ```
 
 ---
-## **5. Performance & Observations**
+# **5. Usage & Integration**
+### **Drop-in Replacement**
+Just change Redis address → Aegis address.
+### **Before (direct Redis)**
+
+```go
+rdb := redis.NewClient(&redis.Options{
+    Addr: "localhost:6379",
+})
+
+val, err := rdb.Get(ctx, "user:1").Result()
+if err == redis.Nil {
+    data := fetchFromDB()
+
+    rdb.Set(ctx, "user:1", data, 60*time.Second)
+}
+```
+
+---
+### **After (using Aegis)**
+```go
+rdb := redis.NewClient(&redis.Options{
+    Addr: "localhost:6380", // Aegis instead of Redis
+})
+
+val, err := rdb.Get(ctx, "user:1").Result()
+if err == redis.Nil {
+    data := fetchFromDB()
+
+    rdb.Set(ctx, "user:1", data, 0) // TTL handled by Aegis policy
+}
+```
+
+---
+### **Cache-Aside Flow (unchanged)**
+```go
+val, err := rdb.Get(ctx, "user:1").Result()
+if err == redis.Nil {
+    data := fetchFromDB()
+
+    rdb.Set(ctx, "user:1", data, 0)
+    return data
+}
+
+return val
+```
+
+---
+### **Using Tags**
+```go
+rdb.Do(ctx, "SET", "user:1", "data", "AEGIS.TAG", "users", "profile")
+```
+
+---
+### **Invalidating Cache**
+```go
+rdb.Do(ctx, "AEGIS.INVALIDATE", "users")
+```
+
+---
+That’s it — no changes to logic, just:
+- change port
+- optionally use Aegis commands
+Everything else stays the same.
+
+---
+## **6. Performance & Observations**
 
 Load test report:  
 [https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true](https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true)
@@ -135,7 +201,7 @@ Load test Summary:
 Aegis introduces minimal overhead as a proxy while significantly reducing backend load through request coalescing and caching controls. Asynchronous processing ensures stable latency, and non-critical events may be dropped under heavy load to preserve performance.
 
 ---
-## **6. Configuration Behavior**
+## **7. Configuration Behavior**
 
 ```text
 Global → Policy → Command-level overrides
@@ -144,7 +210,7 @@ Global → Policy → Command-level overrides
 Global settings act as hard limits, policies define behavior per key pattern, and command-level modifiers (such as tag overrides) apply where supported.
 
 ---
-## **7. Supported Commands**
+## **8. Supported Commands**
 
 Standard Redis commands such as GET, SET, and DEL are supported, with Aegis applying additional logic where configured.
 
@@ -157,13 +223,13 @@ AEGIS.INVALIDATE <tag>
 All other commands are passed through transparently.
 
 ---
-## **8. Known Limitations & Future Work**
+## **9. Known Limitations & Future Work**
 Hot key tracking is instance-local and not shared across deployments. Tag metadata is not automatically cleaned when keys expire, which may lead to Redis bloat. The system does not yet support distributed coordination, and some async events may be dropped under heavy load.
 
 Future improvements include sharded hot key maps, automatic tag cleanup, observability support, and distributed coordination.
 
 ---
-## **9. Documentation**
+## **10. Documentation**
 Full documentation of architecture, rules, logic.
 [https://github.com/Siuumanth/Aegis/tree/main/documentation](https://github.com/Siuumanth/Aegis/tree/main/docs)
 
