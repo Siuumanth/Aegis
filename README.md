@@ -20,7 +20,7 @@ Client → Aegis → Redis
 Aegis sits transparently between the client and Redis, acting as a drop-in replacement. Requests are intercepted, parsed using RESP, matched against policies, processed with caching controls, and then forwarded to Redis.
 
 System flow diagram:  
-![https://github.com/Siuumanth/Aegis/blob/main/notes/images/sys.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/images/sys.png?raw=true)
+![https://github.com/Siuumanth/Aegis/blob/main/documentation/dev-notes/images/sys.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/documentation/dev-notes/images/sys.png?raw=true)
 
 The internal flow consists of a TCP proxy layer for connections, a router for command handling, a policy engine for deciding behavior based on key patterns, and a handler that integrates Redis operations with features like tags, hot keys, and singleflight.
 
@@ -131,7 +131,7 @@ Load test report:
 [https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true](https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true)
 
 Load test Summary:  
-![https://github.com/Siuumanth/Aegis/blob/main/notes/images/load.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/images/load.png?raw=true)
+![https://github.com/Siuumanth/Aegis/blob/main/documentation/dev-notes/images/load.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/documentation/dev-notes/images/load.png?raw=true)
 Aegis introduces minimal overhead as a proxy while significantly reducing backend load through request coalescing and caching controls. Asynchronous processing ensures stable latency, and non-critical events may be dropped under heavy load to preserve performance.
 
 ---
