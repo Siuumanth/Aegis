@@ -1,79 +1,172 @@
-# **Aegis: Redis-Compatible Smart Cache Proxy**
-
-## Project Proposal
+# **Aegis — Redis-Compatible Smart Cache Proxy**
+Aegis is a Redis-compatible proxy that externalizes caching behavior from application code into a centralized, policy-driven layer. It allows defining how caching behaves (TTL, invalidation, deduplication, etc.) without modifying application logic.
 
 ---
-## **Overview**
+## **1. Dependencies**
 
-Aegis is a Go-based, RESP2-compliant proxy that intercepts Redis traffic to enforce caching policies at the infrastructure layer. It allows teams to declaratively control TTLs, key grouping, and hot key behavior via YAML — with zero application code changes.
+- **Core Backend:** Go (Golang) with `net` for TCP server, custom RESP parser for Redis protocol handling, YAML-based configuration parser, and Redis client
+- **Caching & Data Layer:** Redis is used both as the primary datastore and for maintaining metadata such as tag indexes
+- **Resilience & Concurrency:** gobreaker for Redis protection, along with goroutines, channels, mutexes, and waitgroups for concurrent processing
+- **Configuration:** YAML-based configuration system for defining global settings and policies
+- **Containerization:** Docker and Docker Compose 
 
+---
+## **2. System Overview & Architecture**
+
+```text
+Client → Aegis → Redis
 ```
-[App] --(RESP2)--> [Aegis :6379] --(TCP)--> [Redis :6380]
+
+Aegis sits transparently between the client and Redis, acting as a drop-in replacement. Requests are intercepted, parsed using RESP, matched against policies, processed with caching controls, and then forwarded to Redis.
+
+System flow diagram:  
+![https://github.com/Siuumanth/Aegis/blob/main/notes/images/sys.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/images/sys.png?raw=true)
+
+The internal flow consists of a TCP proxy layer for connections, a router for command handling, a policy engine for deciding behavior based on key patterns, and a handler that integrates Redis operations with features like tags, hot keys, and singleflight.
+
+---
+## **3. Design & Implementation**
+### **Configuration & Policies**
+
+Caching behavior is fully driven by YAML configuration instead of application code.
+
+```yaml
+defaults:
+  ttl: 10s
+  min_ttl: 5s
+
+aegis:
+  tags: false
+  hot_keys: true
+  singleflight: true
+```
+
+Policies allow fine-grained control per key pattern:
+
+```yaml
+policies:
+  - name: "user-profiles"
+    match:
+      pattern: "user:*"
+    config:
+      ttl: 60s
+      max_ttl: 10m
+      singleflight: true
+      tags: [users, profile]
+      hot_key:
+        enabled: true
+        window: 2s
+        threshold: 100
+        ttl_multiplier: 3
 ```
 
 ---
-## **Problem Statement**
+### **Request Flow**
 
-Standard Redis usage pushes caching concerns into application code, leading to:
+```text
+Client → Parse → Match Policy → Apply Controls → Redis → Response
+```
 
-- **Policy Fragmentation:** TTL logic, cache invalidation, and hot key handling are duplicated across every service that touches Redis.
-- **Cache Stampedes:** On a cache miss, concurrent requests for the same key all hit the backend simultaneously, causing upstream spikes.
-- **Manual Invalidation:** No native mechanism to group related keys and invalidate them atomically — teams resort to key-scanning or application-side tracking.
-
+- GET requests go through policy lookup, optional singleflight deduplication, and hot key tracking
+- SET requests apply TTL rules and trigger tag registration asynchronously
 ---
-## **Mechanism**
+### **Caching Controls**
 
-- **Protocol Parsing:** Aegis implements a custom RESP2 parser using `bufio` that reads bulk string lengths and array counts to reconstruct commands with byte-level accuracy. Raw bytes are preserved for passthrough commands.
-    
-- **Declarative Rule Engine:** YAML policies are compiled into a runtime registry at startup. For every incoming request, Aegis performs glob-based pattern matching (via `path.Match`) on the key — first match wins. A single rule for `user:*` governs all user keys automatically.
-    
-- **Decoupled Async Processing:** Aegis follows a client-first model — the response is written back immediately, while tag registration and hot key tracking are handed off to background worker pools via buffered channels. Workers are capped and channels are bounded; overflow is dropped silently to prevent backpressure on the hot path.
-    
-- **Transparent Passthrough:** Unrecognized commands are forwarded to Redis via go-redis `Do` using the existing connection pool — no new TCP handshakes, no application breakage.
-    
+- **TTL Management:** Centralized control with optional min/max bounds and safe defaults
+- **Singleflight:** Deduplicates concurrent requests for the same key to reduce backend load
+- **Tags:** Allows grouping keys and performing bulk invalidation
+- **Hot Keys:** Detects frequently accessed keys and extends TTL dynamically
 ---
-## **Key Features**
-
-### **Request Coalescing (Singleflight)**
-
-Wraps `x/sync/singleflight` with context cancellation via `DoChan`. Concurrent `GET` requests for the same key collapse into a single upstream fetch — subsequent callers block and share the result. Configurable per policy.
-
 ### **Tag-Based Invalidation**
-
-Maintains a forward index (`tag → keys`) and reverse index (`key → tags`) in Redis using sets. Tag registration is async, invalidation is synchronous and atomic via a Lua script. `AEGIS.INVALIDATE <tag>` deletes all tagged keys and cleans both indexes in one round trip.
-
-### **TTL Enforcement & Clamping**
-
-On every `SET`, Aegis resolves the final TTL against policy bounds — clamping client-provided values between `min_ttl` and `max_ttl`, falling back to policy `ttl` if none is provided. Pure functions, no side effects.
-
-### **Adaptive Hot Key Extension**
-
-Tracks per-key access frequency in an in-process map with a bounded size (`max_tracked`). When a key crosses a configurable `threshold`, its TTL is extended in Redis by a `ttl_multiplier`. Re-extension is gated by `min_extend_interval` to prevent redundant `EXPIRE` calls. Counts reset on a configurable interval; stale entries are evicted when their estimated Redis expiry passes.
-
-### **Custom SET Modifiers**
-
-Aegis extends the `SET` command with inline modifiers parsed at the tag layer:
-- `AEGIS.TAG t1 t2` — append runtime tags alongside policy tags
-- `AEGIS.TAG_ONLY t1 t2` — override policy tags entirely
-- `AEGIS.NOTAG` — skip tag registration for this key
+```text
+AEGIS.INVALIDATE <tag>
+```
+Tags are implemented using forward (`tag:<tag>`) and reverse (`key-tags:<key>`) indexes stored in Redis.  
+Registration happens asynchronously using pipelines, and invalidation is handled atomically using a Lua script.
 
 ---
-## **Technical Specifications**
-
-- **Runtime:** Go — goroutines and buffered channels for all async work; `sync.RWMutex` for concurrent map access.
-- **Protocol:** RESP2 — custom parser with pipelining awareness; raw byte preservation for passthrough.
-- **Backend:** Redis 6.x/7.x standalone, forced RESP2 via go-redis `Protocol: 2`.
-- **Connection Pooling:** go-redis manages the backend pool; Aegis reuses pooled connections for all operations including passthrough.
-- **Observability:** Prometheus exporter planned for hit/miss ratio, singleflight collapse rate, hot key extension count, and end-to-end latency.
+### **Hot Key System**
+Hot keys are tracked using window-based counters in memory. When a key exceeds a threshold within a time window, its TTL is extended in a controlled manner with rate limiting to avoid excessive Redis updates.
 
 ---
-## **Scope & Limitations**
+### **Concurrency & Failure Handling**
+- Background worker pools handle tags and hot keys asynchronously
+- Channel-based design ensures request path remains non-blocking
+- Redis operations are wrapped with a circuit breaker to prevent cascading failures
+- System fails fast if Redis is unavailable
+---
+## **4. Deployment Model**
 
-- **Compatibility:** Standalone Redis only — Cluster and Sentinel are out of scope for v1.
-- **Interception:** Full handling for `GET`, `SET`, `DEL`. Custom commands: `AEGIS.INVALIDATE`. All others pass through transparently.
-- **Transactions:** `MULTI/EXEC` and Pub/Sub pass through without modification — Aegis makes no guarantees about policy enforcement inside transactions.
-- **Consistency:** Tag registration and hot key tracking are async and best-effort. A crash mid-flight may leave stale index entries — these are eventually cleaned up on invalidation or key expiry.
-- **Negative Caching:** Cut for v1.
+Aegis runs as a stateless proxy and can be deployed either as a binary or using containers.
+
+**Binary execution:**
+```bash
+./aegis
+```
+
+Requires `aegis.yaml` in the same directory.
+**Docker setup:**
+
+```yaml
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  aegis:
+    build: .
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./aegis.yaml:/app/aegis.yaml
+    depends_on:
+      - redis
+```
+
+---
+## **5. Performance & Observations**
+
+Load test report:  
+[https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true](https://github.com/Siuumanth/Aegis/blob/main/Load-test-report.md?raw=true)
+
+Load test Summary:  
+![https://github.com/Siuumanth/Aegis/blob/main/notes/images/load.png?raw=true](https://github.com/Siuumanth/Aegis/blob/main/notes/images/load.png?raw=true)
+Aegis introduces minimal overhead as a proxy while significantly reducing backend load through request coalescing and caching controls. Asynchronous processing ensures stable latency, and non-critical events may be dropped under heavy load to preserve performance.
+
+---
+## **6. Configuration Behavior**
+
+```text
+Global → Policy → Command-level overrides
+```
+
+Global settings act as hard limits, policies define behavior per key pattern, and command-level modifiers (such as tag overrides) apply where supported.
+
+---
+## **7. Supported Commands**
+
+Standard Redis commands such as GET, SET, and DEL are supported, with Aegis applying additional logic where configured.
+
+Custom command:
+
+```text
+AEGIS.INVALIDATE <tag>
+```
+
+All other commands are passed through transparently.
+
+---
+## **8. Known Limitations & Future Work**
+Hot key tracking is instance-local and not shared across deployments. Tag metadata is not automatically cleaned when keys expire, which may lead to Redis bloat. The system does not yet support distributed coordination, and some async events may be dropped under heavy load.
+
+Future improvements include sharded hot key maps, automatic tag cleanup, observability support, and distributed coordination.
+
+---
+## **9. Documentation**
+Full documentation of architecture, rules, logic.
+[https://github.com/Siuumanth/Aegis/tree/main/documentation](https://github.com/Siuumanth/Aegis/tree/main/documentation)
 
 ---
 
+Noice.
